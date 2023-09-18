@@ -10,30 +10,77 @@
 	<script>
 		class Buffer
 		{
-			constructor()
+			/** @type Map<number, Segment> */
+			segments = new Map();
+
+			/** @type HTMLTextAreaElement */
+			text_area;
+
+			constructor(text_area)
 			{
-				/** @type Map<number, Segment> */
-				this.segments = new Map();
+				this.text_area = text_area;
+			}
+
+			update_statistics()
+			{
+				// Calculate average speed.
+				let average_speed = 0;
+				average_speed += this.segments.get(0).speed;
+				average_speed += this.segments.get(1).speed;
+				average_speed += this.segments.get(2).speed;
+				average_speed += this.segments.get(3).speed;
+				average_speed += this.segments.get(4).speed;
+				average_speed += this.segments.get(5).speed;
+				average_speed = average_speed / 5;
+
+				// Show statistics.
+				let text_area = this.text_area;
+				text_area.textContent = "Buffer:\n";
+				this.segments.forEach(function(value, key)
+				{
+					let status = (value.speed / average_speed) < 0.5 ? "bad" : "good";
+					text_area.textContent += `  Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
+				});
+				text_area.textContent += `Average speed: ${(average_speed / 131072).toFixed(2)}.`;
 			}
 		}
 
 		class Segment
 		{
-			constructor(url)
+			/** @type XMLHttpRequest */
+			xhr = new XMLHttpRequest();
+
+			/** @type number */
+			speed = 0;
+
+			/** @type number */
+			start_point = new Date().getTime();
+
+			/** @type Buffer */
+			buffer;
+
+			constructor(associated_buffer, url)
 			{
-				/** @type XMLHttpRequest */
-				this.xhr = new XMLHttpRequest();
+				this.buffer = associated_buffer;
 				this.xhr.open("GET", url, true);
 				this.xhr.responseType = "arraybuffer";
+				this.xhr.onprogress = (event) => { this.on_progress(event); }
 				this.xhr.send();
+			}
 
-				/** @type number */
-				this.speed = 0;
+			on_progress(event)
+			{
+				// Update segment speed.
+				let elapsed_time = new Date().getTime() - this.start_point;
+				let multiplier = 1000 / elapsed_time;
+				this.speed = event.loaded * multiplier;
+
+				// Update statistics.
+				buffer.update_statistics();
 			}
 		}
 
-		let metrics = document.getElementsByTagName("textarea")[0];
-		let buffer = new Buffer;
+		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 
 		function loader()
 		{
@@ -43,40 +90,13 @@
 				let filename = url.pathname.split('/').pop();
 				let index = parseInt(filename.match(/\d+/)[0]);
 
-				for(let i = buffer.segments.size; i < 6; i++)
+				while(buffer.segments.size < 6)
 				{
 					let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
 					max_index++;
 
-					let segment = new Segment("http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
+					let segment = new Segment(buffer, "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
 					buffer.segments.set(max_index, segment);
-
-					let start_point = new Date().getTime();
-					segment.xhr.onprogress = function(event)
-					{
-						let elapsed_time = new Date().getTime() - start_point;
-						let multiplier = 1000 / elapsed_time;
-						let bytes_per_sec = event.loaded * multiplier;
-						segment.speed = event.loaded * multiplier;
-
-						let average_speed = 0;
-						average_speed += buffer.segments.get(0).speed;
-						average_speed += buffer.segments.get(1).speed;
-						average_speed += buffer.segments.get(2).speed;
-						average_speed += buffer.segments.get(3).speed;
-						average_speed += buffer.segments.get(4).speed;
-						average_speed += buffer.segments.get(5).speed;
-						average_speed = average_speed / 5;
-
-						metrics.textContent = "Buffer:\n";
-						buffer.segments.forEach(function(value, key)
-						{
-							// let status = value.speed < average_speed ? "bad" : "good";
-							let status = (value.speed / average_speed) < 0.5 ? "bad" : "good";
-							metrics.textContent += `    Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
-						});
-						metrics.textContent += `Average speed: ${(average_speed / 131072).toFixed(2)}.`;
-					};
 				}
 
 				if(buffer.segments.has(index))
@@ -86,7 +106,7 @@
 					segment.xhr.onload = function()
 					{
 						callbacks.onSuccess({data: segment.xhr.response}, {}, context);
-						preloaded_segments.delete(index);
+						buffer.segments.delete(index);
 					};
 				}
 			}
