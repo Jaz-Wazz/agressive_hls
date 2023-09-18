@@ -11,15 +11,18 @@
 		let metrics = document.getElementsByTagName("textarea")[0];
 		let preloaded_segments = new Map();
 
-		class buffer_entry
+		class Segment
 		{
-			constructor()
+			constructor(url)
 			{
 				/** @type XMLHttpRequest */
-				this.request;
+				this.xhr = new XMLHttpRequest();
+				this.xhr.open("GET", url, true);
+				this.xhr.responseType = "arraybuffer";
+				this.xhr.send();
 
 				/** @type number */
-				this.speed;
+				this.speed = 0;
 			}
 		}
 
@@ -36,23 +39,16 @@
 					let max_index = preloaded_segments.size != 0 ? Math.max(... preloaded_segments.keys()) : -1;
 					max_index++;
 
-					let xhr = new XMLHttpRequest();
-					xhr.open("GET", "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts", true);
-					xhr.responseType = "arraybuffer";
-					xhr.send();
-
-					/** @type buffer_entry */
-					let entry = new buffer_entry();
-					entry.request = xhr;
-					preloaded_segments.set(max_index, entry);
+					let segment = new Segment("http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
+					preloaded_segments.set(max_index, segment);
 
 					let start_point = new Date().getTime();
-					xhr.onprogress = function(event)
+					segment.xhr.onprogress = function(event)
 					{
 						let elapsed_time = new Date().getTime() - start_point;
 						let multiplier = 1000 / elapsed_time;
-						// let bytes_per_sec = event.loaded * multiplier;
-						entry.speed = event.loaded * multiplier;
+						let bytes_per_sec = event.loaded * multiplier;
+						segment.speed = event.loaded * multiplier;
 
 						let average_speed = 0;
 						average_speed += preloaded_segments.get(0).speed;
@@ -62,8 +58,6 @@
 						average_speed += preloaded_segments.get(4).speed;
 						average_speed += preloaded_segments.get(5).speed;
 						average_speed = average_speed / 5;
-
-
 
 						metrics.textContent = "Buffer:\n";
 						preloaded_segments.forEach(function(value, key)
@@ -76,17 +70,14 @@
 					};
 				}
 
-				console.log(preloaded_segments);
-
 				if(preloaded_segments.has(index))
 				{
-					/** @type buffer_entry | undefined */
-					let entry = preloaded_segments.get(index);
-					let xhr = entry.request;
+					/** @type Segment | undefined */
+					let segment = preloaded_segments.get(index);
 
-					xhr.onload = function()
+					segment.xhr.onload = function()
 					{
-						callbacks.onSuccess({data: xhr.response}, {}, context);
+						callbacks.onSuccess({data: segment.xhr.response}, {}, context);
 						preloaded_segments.delete(index);
 					};
 				}
