@@ -7,41 +7,80 @@
 		<video id="player" controls="controls"></video>
 	</body>
 	<script>
-		let preloaded_segments = new Map();
+		const megabyte = 1048576;
 
-		function loader()
+		let xhr = new XMLHttpRequest();
+		xhr.open("GET", "http://ia801400.s3dns.us.archive.org/0366d7f8/1.ts", true);
+		xhr.send();
+
+		xhr.onload = function()
 		{
-			this.load = async function(context, config, callbacks)
-			{
-				let url = new URL(context.url);
-				let filename = url.pathname.split('/').pop();
-				let index = parseInt(filename.match(/\d+/)[0]);
+			console.log("Loaded.");
+		};
 
-				for(let i = preloaded_segments.size; i < 6; i++)
-				{
-					let max_index = preloaded_segments.size != 0 ? Math.max(... preloaded_segments.keys()) : -1;
-					max_index++;
-					preloaded_segments.set(max_index, fetch("http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts"));
-				}
+		// let deadline = new Date().getTime() + 1000;
+		// let bytes_per_sec = 0;
+		// let prev_loaded = 0;
 
-				console.log(preloaded_segments);
+		// xhr.onprogress = function(event)
+		// {
+		// 	recieved = event.loaded - prev_loaded;
+		// 	prev_loaded = event.loaded;
 
-				if(preloaded_segments.has(index))
-				{
-					/** @type Promise<Response> | undefined */
-					let promise = preloaded_segments.get(index);
+		// 	bytes_per_sec += recieved;
 
-					let response = await promise;
-					let buf = await response.arrayBuffer();
+		// 	if(new Date().getTime() > deadline)
+		// 	{
+		// 		deadline = new Date().getTime() + 1000;
+		// 		console.log("Bytes: %s mbit/s.", (bytes_per_sec / 131072).toFixed(2));
+		// 		bytes_per_sec = 0;
+		// 	}
+		// };
 
-					preloaded_segments.delete(index);
-					callbacks.onSuccess({data: buf}, {}, context);
-				}
-			}
-		}
+		let start_point = new Date().getTime();
 
-		let hls = new Hls({fLoader: loader});
-		hls.loadSource('http://ia801400.s3dns.us.archive.org/0366d7f8/index-dvr.m3u8');
-		hls.attachMedia(player);
+		xhr.onprogress = function(event)
+		{
+			let elapsed_time = new Date().getTime() - start_point;
+			let multiplier = 1000 / elapsed_time;
+			let bytes_per_sec = event.loaded * multiplier;
+
+			console.log("Bytes: %s mbit/s.", (bytes_per_sec / 131072).toFixed(2));
+		};
+
+		// function loader()
+		// {
+		// 	this.load = async function(context, config, callbacks)
+		// 	{
+		// 		let url = new URL(context.url);
+		// 		let filename = url.pathname.split('/').pop();
+		// 		let index = parseInt(filename.match(/\d+/)[0]);
+
+		// 		// for(let i = preloaded_segments.size; i < 6; i++)
+		// 		// {
+		// 		// 	let max_index = preloaded_segments.size != 0 ? Math.max(... preloaded_segments.keys()) : -1;
+		// 		// 	max_index++;
+		// 		// 	preloaded_segments.set(max_index, fetch("http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts"));
+		// 		// }
+
+		// 		// console.log(preloaded_segments);
+
+		// 		// if(preloaded_segments.has(index))
+		// 		// {
+		// 		// 	/** @type Promise<Response> | undefined */
+		// 		// 	let promise = preloaded_segments.get(index);
+
+		// 		// 	let response = await promise;
+		// 		// 	let buf = await response.arrayBuffer();
+
+		// 		// 	preloaded_segments.delete(index);
+		// 		// 	callbacks.onSuccess({data: buf}, {}, context);
+		// 		// }
+		// 	}
+		// }
+
+		// let hls = new Hls({fLoader: loader});
+		// hls.loadSource('http://ia801400.s3dns.us.archive.org/0366d7f8/index-dvr.m3u8');
+		// hls.attachMedia(player);
 	</script>
 </html>
