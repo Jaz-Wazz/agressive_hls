@@ -82,9 +82,9 @@
 
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 
-		function loader()
+		class Loader
 		{
-			this.load = function(context, config, callbacks)
+			load(context, config, callbacks)
 			{
 				let url = new URL(context.url);
 				let filename = url.pathname.split('/').pop();
@@ -112,7 +112,7 @@
 			}
 		}
 
-		let hls = new Hls({fLoader: loader});
+		let hls = new Hls({fLoader: Loader});
 		hls.loadSource('http://ia801400.s3dns.us.archive.org/0366d7f8/index-dvr.m3u8');
 		hls.attachMedia(player);
 	</script>
