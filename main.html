@@ -8,8 +8,14 @@
 		<textarea></textarea>
 	</body>
 	<script>
-		let metrics = document.getElementsByTagName("textarea")[0];
-		let preloaded_segments = new Map();
+		class Buffer
+		{
+			constructor()
+			{
+				/** @type Map<number, Segment> */
+				this.segments = new Map();
+			}
+		}
 
 		class Segment
 		{
@@ -26,6 +32,9 @@
 			}
 		}
 
+		let metrics = document.getElementsByTagName("textarea")[0];
+		let buffer = new Buffer;
+
 		function loader()
 		{
 			this.load = function(context, config, callbacks)
@@ -34,13 +43,13 @@
 				let filename = url.pathname.split('/').pop();
 				let index = parseInt(filename.match(/\d+/)[0]);
 
-				for(let i = preloaded_segments.size; i < 6; i++)
+				for(let i = buffer.segments.size; i < 6; i++)
 				{
-					let max_index = preloaded_segments.size != 0 ? Math.max(... preloaded_segments.keys()) : -1;
+					let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
 					max_index++;
 
 					let segment = new Segment("http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
-					preloaded_segments.set(max_index, segment);
+					buffer.segments.set(max_index, segment);
 
 					let start_point = new Date().getTime();
 					segment.xhr.onprogress = function(event)
@@ -51,16 +60,16 @@
 						segment.speed = event.loaded * multiplier;
 
 						let average_speed = 0;
-						average_speed += preloaded_segments.get(0).speed;
-						average_speed += preloaded_segments.get(1).speed;
-						average_speed += preloaded_segments.get(2).speed;
-						average_speed += preloaded_segments.get(3).speed;
-						average_speed += preloaded_segments.get(4).speed;
-						average_speed += preloaded_segments.get(5).speed;
+						average_speed += buffer.segments.get(0).speed;
+						average_speed += buffer.segments.get(1).speed;
+						average_speed += buffer.segments.get(2).speed;
+						average_speed += buffer.segments.get(3).speed;
+						average_speed += buffer.segments.get(4).speed;
+						average_speed += buffer.segments.get(5).speed;
 						average_speed = average_speed / 5;
 
 						metrics.textContent = "Buffer:\n";
-						preloaded_segments.forEach(function(value, key)
+						buffer.segments.forEach(function(value, key)
 						{
 							// let status = value.speed < average_speed ? "bad" : "good";
 							let status = (value.speed / average_speed) < 0.5 ? "bad" : "good";
@@ -70,10 +79,9 @@
 					};
 				}
 
-				if(preloaded_segments.has(index))
+				if(buffer.segments.has(index))
 				{
-					/** @type Segment | undefined */
-					let segment = preloaded_segments.get(index);
+					let segment = buffer.segments.get(index);
 
 					segment.xhr.onload = function()
 					{
