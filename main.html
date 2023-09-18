@@ -16,6 +16,9 @@
 			/** @type HTMLTextAreaElement */
 			text_area;
 
+			/** @type number */
+			average_speed = 0;
+
 			constructor(text_area)
 			{
 				this.text_area = text_area;
@@ -23,25 +26,19 @@
 
 			update_statistics()
 			{
-				// Calculate average speed.
-				let average_speed = 0;
-				average_speed += this.segments.get(0).speed;
-				average_speed += this.segments.get(1).speed;
-				average_speed += this.segments.get(2).speed;
-				average_speed += this.segments.get(3).speed;
-				average_speed += this.segments.get(4).speed;
-				average_speed += this.segments.get(5).speed;
-				average_speed = average_speed / 5;
+				// Update average speed.
+				let sum = 0;
+				this.segments.forEach(value => { sum += value.speed; });
+				this.average_speed = sum / this.segments.size;
 
 				// Show statistics.
-				let text_area = this.text_area;
-				text_area.textContent = "Buffer:\n";
-				this.segments.forEach(function(value, key)
+				this.text_area.textContent = "Buffer:\n";
+				this.segments.forEach((value, key) =>
 				{
-					let status = (value.speed / average_speed) < 0.5 ? "bad" : "good";
-					text_area.textContent += `  Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
+					let status = (value.speed / this.average_speed) < 0.5 ? "bad" : "good";
+					this.text_area.textContent += `  Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
 				});
-				text_area.textContent += `Average speed: ${(average_speed / 131072).toFixed(2)}.`;
+				this.text_area.textContent += `Average speed: ${(this.average_speed / 131072).toFixed(2)}.`;
 			}
 		}
 
