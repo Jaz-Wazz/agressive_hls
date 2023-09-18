@@ -8,11 +8,10 @@
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
-		function fake_fetch(method, url, on_progress)
+		function fake_fetch(xhr, method, url, on_progress)
 		{
 			return new Promise((resolve, reject) =>
 			{
-				var xhr = new XMLHttpRequest();
 				xhr.responseType = "arraybuffer";
 				xhr.open(method, url);
 				xhr.onload = resolve;
@@ -72,8 +71,14 @@
 					let speed_relative_average_speed = (value.speed / this.average_speed);
 					let speed_relative_max_speed = (value.speed / this.max_speed);
 
-					let status_by_sras = (speed_relative_average_speed	> 0.5) ? "good" : "bad";
-					let status_by_srms = (speed_relative_max_speed		> 0.5) ? "good" : "bad";
+					let status_by_sras = "wait";
+					let status_by_srms = "wait";
+
+					if((new Date().getTime()) > value.start_point + 8000)
+					{
+						status_by_sras = (speed_relative_average_speed	> 0.5) ? "good" : "bad";
+						status_by_srms = (speed_relative_max_speed		> 0.5) ? "good" : "bad";
+					}
 
 					this.text_area.textContent += key.toString().padStart(7);
 					this.text_area.textContent += this.format(value.speed).padStart(13);
@@ -82,6 +87,11 @@
 					this.text_area.textContent += status_by_sras.padStart(7);
 					this.text_area.textContent += status_by_srms.padStart(7);
 					this.text_area.textContent += "\n";
+
+					if(status_by_sras == "bad")
+					{
+						value.abort_and_retry();
+					}
 				});
 
 				// Print other statistics.
@@ -93,6 +103,9 @@
 
 		class Segment
 		{
+			/** @type XMLHttpRequest */
+			xhr = new XMLHttpRequest();
+
 			/** @type Promise */
 			promise;
 
@@ -105,10 +118,14 @@
 			/** @type Buffer */
 			buffer;
 
-			constructor(associated_buffer, url)
+			/** @type Url */
+			url;
+
+			constructor(associated_buffer, segment_url)
 			{
 				this.buffer = associated_buffer;
-				this.promise = fake_fetch("GET", url, (event) => { this.on_progress(event); });
+				this.promise = fake_fetch(this.xhr, "GET", segment_url, (event) => { this.on_progress(event); });
+				this.url = segment_url;
 			}
 
 			on_progress(event)
@@ -120,6 +137,15 @@
 
 				// Update statistics.
 				buffer.update_statistics();
+			}
+
+			abort_and_retry()
+			{
+				this.xhr.abort();
+				this.xhr.open("GET", this.url);
+				this.speed = 0;
+				this.start_point = new Date().getTime();
+				this.xhr.send();
 			}
 		}
 
