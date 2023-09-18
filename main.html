@@ -9,6 +9,18 @@
 	<script>
 		let preloaded_segments = new Map();
 
+		function fake_fetch(method, url)
+		{
+			return new Promise(function (resolve, reject) {
+				var xhr = new XMLHttpRequest();
+				xhr.responseType = "arraybuffer";
+				xhr.open(method, url);
+				xhr.onload = resolve;
+				xhr.onerror = reject;
+				xhr.send();
+			});
+		}
+
 		function loader()
 		{
 			this.load = async function(context, config, callbacks)
@@ -17,11 +29,11 @@
 				let filename = url.pathname.split('/').pop();
 				let index = parseInt(filename.match(/\d+/)[0]);
 
-				for(let i = preloaded_segments.size; i < 6; i++)
+				for(let i = preloaded_segments.size; i < 3; i++)
 				{
 					let max_index = preloaded_segments.size != 0 ? Math.max(... preloaded_segments.keys()) : -1;
 					max_index++;
-					preloaded_segments.set(max_index, fetch("http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts"));
+					preloaded_segments.set(max_index, fake_fetch("GET", "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts"));
 				}
 
 				console.log(preloaded_segments);
@@ -31,8 +43,12 @@
 					/** @type Promise<Response> | undefined */
 					let promise = preloaded_segments.get(index);
 
-					let response = await promise;
-					let buf = await response.arrayBuffer();
+					let result = await promise;
+					let buf = result.target.response;
+
+					console.log(promise);
+					console.log(result);
+					console.log(buf);
 
 					preloaded_segments.delete(index);
 					callbacks.onSuccess({data: buf}, {}, context);
