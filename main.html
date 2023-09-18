@@ -7,6 +7,8 @@
 		<video id="player" controls="controls"></video>
 	</body>
 	<script>
+		let preloaded_segments = new Map();
+
 		function loader()
 		{
 			this.load = function(context, config, callbacks)
@@ -15,16 +17,32 @@
 				let filename = url.pathname.split('/').pop();
 				let index = parseInt(filename.match(/\d+/)[0]);
 
-				let xhr = new XMLHttpRequest();
-				xhr.open("GET", url, true);
-				xhr.send();
-				xhr.responseType = "arraybuffer";
-
-				xhr.onload = function()
+				for(let i = preloaded_segments.size; i < 6; i++)
 				{
-					console.log("Loaded.");
-					callbacks.onSuccess({data: xhr.response}, {}, context);
-				};
+					let max_index = preloaded_segments.size != 0 ? Math.max(... preloaded_segments.keys()) : -1;
+					max_index++;
+
+					let xhr = new XMLHttpRequest();
+					xhr.open("GET", "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts", true);
+					xhr.responseType = "arraybuffer";
+					xhr.send();
+
+					preloaded_segments.set(max_index, xhr);
+				}
+
+				console.log(preloaded_segments);
+
+				if(preloaded_segments.has(index))
+				{
+					/** @type XMLHttpRequest | undefined */
+					let xhr = preloaded_segments.get(index);
+
+					xhr.onload = function()
+					{
+						callbacks.onSuccess({data: xhr.response}, {}, context);
+						preloaded_segments.delete(index);
+					};
+				}
 			}
 		}
 
