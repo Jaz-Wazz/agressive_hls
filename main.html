@@ -8,6 +8,18 @@
 		<textarea></textarea>
 	</body>
 	<script>
+		function fake_fetch(method, url)
+		{
+			return new Promise(function (resolve, reject) {
+				var xhr = new XMLHttpRequest();
+				xhr.responseType = "arraybuffer";
+				xhr.open(method, url);
+				xhr.onload = resolve;
+				xhr.onerror = reject;
+				xhr.send();
+			});
+		}
+
 		class Buffer
 		{
 			/** @type Map<number, Segment> */
@@ -24,28 +36,28 @@
 				this.text_area = text_area;
 			}
 
-			update_statistics()
-			{
-				// Update average speed.
-				let sum = 0;
-				this.segments.forEach(value => { sum += value.speed; });
-				this.average_speed = sum / this.segments.size;
+			// update_statistics()
+			// {
+			// 	// Update average speed.
+			// 	let sum = 0;
+			// 	this.segments.forEach(value => { sum += value.speed; });
+			// 	this.average_speed = sum / this.segments.size;
 
-				// Show statistics.
-				this.text_area.textContent = "Buffer:\n";
-				this.segments.forEach((value, key) =>
-				{
-					let status = (value.speed / this.average_speed) < 0.5 ? "bad" : "good";
-					this.text_area.textContent += `  Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
-				});
-				this.text_area.textContent += `Average speed: ${(this.average_speed / 131072).toFixed(2)}.`;
-			}
+			// 	// Show statistics.
+			// 	this.text_area.textContent = "Buffer:\n";
+			// 	this.segments.forEach((value, key) =>
+			// 	{
+			// 		let status = (value.speed / this.average_speed) < 0.5 ? "bad" : "good";
+			// 		this.text_area.textContent += `  Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
+			// 	});
+			// 	this.text_area.textContent += `Average speed: ${(this.average_speed / 131072).toFixed(2)}.`;
+			// }
 		}
 
 		class Segment
 		{
-			/** @type XMLHttpRequest */
-			xhr = new XMLHttpRequest();
+			/** @type Promise */
+			promise;
 
 			/** @type number */
 			speed = 0;
@@ -59,29 +71,30 @@
 			constructor(associated_buffer, url)
 			{
 				this.buffer = associated_buffer;
-				this.xhr.open("GET", url, true);
-				this.xhr.responseType = "arraybuffer";
-				this.xhr.onprogress = (event) => { this.on_progress(event); }
-				this.xhr.send();
+				this.promise = fake_fetch("GET", url);
+				// this.xhr.open("GET", url, true);
+				// this.xhr.responseType = "arraybuffer";
+				// this.xhr.onprogress = (event) => { this.on_progress(event); }
+				// this.xhr.send();
 			}
 
-			on_progress(event)
-			{
-				// Update segment speed.
-				let elapsed_time = new Date().getTime() - this.start_point;
-				let multiplier = 1000 / elapsed_time;
-				this.speed = event.loaded * multiplier;
+			// on_progress(event)
+			// {
+			// 	// Update segment speed.
+			// 	let elapsed_time = new Date().getTime() - this.start_point;
+			// 	let multiplier = 1000 / elapsed_time;
+			// 	this.speed = event.loaded * multiplier;
 
-				// Update statistics.
-				buffer.update_statistics();
-			}
+			// 	// Update statistics.
+			// 	buffer.update_statistics();
+			// }
 		}
 
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 
 		class Loader
 		{
-			load(context, config, callbacks)
+			async load(context, config, callbacks)
 			{
 				let url = new URL(context.url);
 				let filename = url.pathname.split('/').pop();
@@ -99,12 +112,11 @@
 				if(buffer.segments.has(index))
 				{
 					let segment = buffer.segments.get(index);
+					let result = await segment.promise;
+					let buf = result.target.response;
 
-					segment.xhr.onload = function()
-					{
-						callbacks.onSuccess({data: segment.xhr.response}, {}, context);
-						buffer.segments.delete(index);
-					};
+					callbacks.onSuccess({data: buf}, {}, context);
+					buffer.segments.delete(index);
 				}
 			}
 		}
