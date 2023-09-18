@@ -13,6 +13,16 @@ body
 video
 {
 	background-color: #202225;
-	width: 640px;
+	height: 360px;
 	aspect-ratio: 16/9;
+}
+
+textarea
+{
+	height: 360px;
+	width: 360px;
+	color: rgb(227, 227, 227);
+	background-color: #181a1c;
+	border: none;
+	resize: none;
 }

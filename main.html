@@ -5,9 +5,23 @@
 	</head>
 	<body>
 		<video id="player" controls="controls"></video>
+		<textarea></textarea>
 	</body>
 	<script>
+		let metrics = document.getElementsByTagName("textarea")[0];
 		let preloaded_segments = new Map();
+
+		class buffer_entry
+		{
+			constructor()
+			{
+				/** @type XMLHttpRequest */
+				this.request;
+
+				/** @type number */
+				this.speed;
+			}
+		}
 
 		function loader()
 		{
@@ -27,15 +41,48 @@
 					xhr.responseType = "arraybuffer";
 					xhr.send();
 
-					preloaded_segments.set(max_index, xhr);
+					/** @type buffer_entry */
+					let entry = new buffer_entry();
+					entry.request = xhr;
+					preloaded_segments.set(max_index, entry);
+
+					let start_point = new Date().getTime();
+					xhr.onprogress = function(event)
+					{
+						let elapsed_time = new Date().getTime() - start_point;
+						let multiplier = 1000 / elapsed_time;
+						// let bytes_per_sec = event.loaded * multiplier;
+						entry.speed = event.loaded * multiplier;
+
+						let average_speed = 0;
+						average_speed += preloaded_segments.get(0).speed;
+						average_speed += preloaded_segments.get(1).speed;
+						average_speed += preloaded_segments.get(2).speed;
+						average_speed += preloaded_segments.get(3).speed;
+						average_speed += preloaded_segments.get(4).speed;
+						average_speed += preloaded_segments.get(5).speed;
+						average_speed = average_speed / 5;
+
+
+
+						metrics.textContent = "Buffer:\n";
+						preloaded_segments.forEach(function(value, key)
+						{
+							// let status = value.speed < average_speed ? "bad" : "good";
+							let status = (value.speed / average_speed) < 0.5 ? "bad" : "good";
+							metrics.textContent += `    Segment ${key} -> ${(value.speed / 131072).toFixed(2)} -> ${status}\n`;
+						});
+						metrics.textContent += `Average speed: ${(average_speed / 131072).toFixed(2)}.`;
+					};
 				}
 
 				console.log(preloaded_segments);
 
 				if(preloaded_segments.has(index))
 				{
-					/** @type XMLHttpRequest | undefined */
-					let xhr = preloaded_segments.get(index);
+					/** @type buffer_entry | undefined */
+					let entry = preloaded_segments.get(index);
+					let xhr = entry.request;
 
 					xhr.onload = function()
 					{
