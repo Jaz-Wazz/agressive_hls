@@ -153,10 +153,24 @@
 
 		class Loader
 		{
+			/** @type Promise */
+			static playlist;
+
+			static handle_events(hls)
+			{
+				Loader.playlist = new Promise((resolve, reject) =>
+				{
+					hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
+					{
+						resolve(data.details.fragments);
+					});
+				});
+			}
+
 			async load(context, config, callbacks)
 			{
-				let url = context.url.substring(0, context.url.lastIndexOf("/") + 1);
-				let index = parseInt(context.frag.relurl.match(/\d+/)[0]);
+				let index = context.frag.sn;
+				let playlist = await Loader.playlist;
 
 				if(buffer.segments.has(index))
 				{
@@ -166,11 +180,8 @@
 					// Grow buffer.
 					while(buffer.segments.size < 6)
 					{
-						let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
-						max_index++;
-
-						let segment = new Segment(buffer, url + max_index + ".ts");
-						buffer.segments.set(max_index, segment);
+						let next_index = Math.max(... buffer.segments.keys()) + 1;
+						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
 					}
 				}
 				else
@@ -192,7 +203,7 @@
 					// Fill buffer.
 					for(let i = index; buffer.segments.size < 6; i++)
 					{
-						let segment = new Segment(buffer, url + i + ".ts");
+						let segment = new Segment(buffer, playlist[i].url);
 						buffer.segments.set(i, segment);
 					}
 				}
@@ -211,11 +222,8 @@
 					// Grow buffer.
 					while(buffer.segments.size < 6)
 					{
-						let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
-						max_index++;
-
-						let segment = new Segment(buffer, url + max_index + ".ts");
-						buffer.segments.set(max_index, segment);
+						let next_index = Math.max(... buffer.segments.keys()) + 1;
+						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
 					}
 				}
 				catch(error)
@@ -236,7 +244,9 @@
 		}
 
 		let hls = new Hls({fLoader: Loader});
-		hls.loadSource('http://ia902708.s3dns.us.archive.org/ff12bdcd/index-dvr.m3u8');
+		console.log(hls);
+		Loader.handle_events(hls);
+		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
 	</script>
 </html>
