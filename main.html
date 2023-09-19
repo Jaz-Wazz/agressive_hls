@@ -207,6 +207,16 @@
 					// Return segment.
 					callbacks.onSuccess({data: buf}, {}, context);
 					buffer.segments.delete(index);
+
+					// Grow buffer.
+					while(buffer.segments.size < 6)
+					{
+						let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
+						max_index++;
+
+						let segment = new Segment(buffer, url + max_index + ".ts");
+						buffer.segments.set(max_index, segment);
+					}
 				}
 				catch(error)
 				{
