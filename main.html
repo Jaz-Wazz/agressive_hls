@@ -243,8 +243,7 @@
 			}
 		}
 
-		let hls = new Hls({fLoader: Loader});
-		console.log(hls);
+		let hls = new Hls({fLoader: Loader, enableWorker: true});
 		Loader.handle_events(hls);
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
