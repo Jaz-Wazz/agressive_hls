@@ -182,11 +182,10 @@
 					// Abort all xhr requests, because destruct xhr object not aborted request.
 					buffer.segments.forEach((value, key) =>
 					{
+						// Abort request and reject linked promise.
+						value.xhr.onabort = value.xhr.onerror;
 						value.xhr.abort();
 					});
-
-					// <-- This point for cancel all waiting promises.
-					// <-- This is should be fixed.
 
 					// Clear buffer.
 					buffer.segments.clear();
@@ -199,14 +198,31 @@
 					}
 				}
 
-				// Wait segment.
-				let segment = buffer.segments.get(index);
-				let result = await segment.promise;
-				let buf = result.target.response;
+				try
+				{
+					// Wait segment.
+					let segment = buffer.segments.get(index);
+					let result = await segment.promise;
+					let buf = result.target.response;
 
-				// Return segment.
-				callbacks.onSuccess({data: buf}, {}, context);
-				buffer.segments.delete(index);
+					// Return segment.
+					callbacks.onSuccess({data: buf}, {}, context);
+					buffer.segments.delete(index);
+				}
+				catch(error)
+				{
+					// Ignore "abort" errors, because they a shutdown indicator.
+					if(error.type != "abort")
+					{
+						console.log("Wait sigment %i error!", index);
+						console.log(error);
+					}
+				}
+			}
+
+			abort()
+			{
+				// Api stub to supress errors and ignore "abort" events.
 			}
 		}
 
