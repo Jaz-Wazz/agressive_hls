@@ -155,9 +155,8 @@
 		{
 			async load(context, config, callbacks)
 			{
-				let url = new URL(context.url);
-				let filename = url.pathname.split('/').pop();
-				let index = parseInt(filename.match(/\d+/)[0]);
+				let url = context.url.substring(0, context.url.lastIndexOf("/") + 1);
+				let index = parseInt(context.frag.relurl.match(/\d+/)[0]);
 
 				if(buffer.segments.has(index))
 				{
@@ -170,7 +169,7 @@
 						let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
 						max_index++;
 
-						let segment = new Segment(buffer, "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
+						let segment = new Segment(buffer, url + max_index + ".ts");
 						buffer.segments.set(max_index, segment);
 					}
 				}
@@ -193,7 +192,7 @@
 					// Fill buffer.
 					for(let i = index; buffer.segments.size < 6; i++)
 					{
-						let segment = new Segment(buffer, "http://ia801400.s3dns.us.archive.org/0366d7f8/" + i + ".ts");
+						let segment = new Segment(buffer, url + i + ".ts");
 						buffer.segments.set(i, segment);
 					}
 				}
@@ -227,7 +226,7 @@
 		}
 
 		let hls = new Hls({fLoader: Loader});
-		hls.loadSource('http://ia801400.s3dns.us.archive.org/0366d7f8/index-dvr.m3u8');
+		hls.loadSource('http://ia902708.s3dns.us.archive.org/ff12bdcd/index-dvr.m3u8');
 		hls.attachMedia(player);
 	</script>
 </html>
