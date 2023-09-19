@@ -159,24 +159,54 @@
 				let filename = url.pathname.split('/').pop();
 				let index = parseInt(filename.match(/\d+/)[0]);
 
-				while(buffer.segments.size < 6)
-				{
-					let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
-					max_index++;
-
-					let segment = new Segment(buffer, "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
-					buffer.segments.set(max_index, segment);
-				}
-
 				if(buffer.segments.has(index))
 				{
-					let segment = buffer.segments.get(index);
-					let result = await segment.promise;
-					let buf = result.target.response;
+					// Buffer hit: Monotonic playing.
+					console.log("HIT %i", index);
 
-					callbacks.onSuccess({data: buf}, {}, context);
-					buffer.segments.delete(index);
+					// Grow buffer.
+					while(buffer.segments.size < 6)
+					{
+						let max_index = buffer.segments.size != 0 ? Math.max(... buffer.segments.keys()) : -1;
+						max_index++;
+
+						let segment = new Segment(buffer, "http://ia801400.s3dns.us.archive.org/0366d7f8/" + max_index + ".ts");
+						buffer.segments.set(max_index, segment);
+					}
 				}
+				else
+				{
+					// Buffer miss: Start or Seek.
+					console.log("MISS %i", index);
+
+					// Abort all xhr requests, because destruct xhr object not aborted request.
+					buffer.segments.forEach((value, key) =>
+					{
+						value.xhr.abort();
+					});
+
+					// <-- This point for cancel all waiting promises.
+					// <-- This is should be fixed.
+
+					// Clear buffer.
+					buffer.segments.clear();
+
+					// Fill buffer.
+					for(let i = index; buffer.segments.size < 6; i++)
+					{
+						let segment = new Segment(buffer, "http://ia801400.s3dns.us.archive.org/0366d7f8/" + i + ".ts");
+						buffer.segments.set(i, segment);
+					}
+				}
+
+				// Wait segment.
+				let segment = buffer.segments.get(index);
+				let result = await segment.promise;
+				let buf = result.target.response;
+
+				// Return segment.
+				callbacks.onSuccess({data: buf}, {}, context);
+				buffer.segments.delete(index);
 			}
 		}
 
