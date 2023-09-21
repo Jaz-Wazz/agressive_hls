@@ -136,7 +136,7 @@
 				this.speed = event.loaded * multiplier;
 
 				// Update statistics.
-				buffer.update_statistics();
+				this.buffer.update_statistics();
 			}
 
 			abort_and_retry()
@@ -148,8 +148,6 @@
 				this.xhr.send();
 			}
 		}
-
-		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 
 		class Loader
 		{
@@ -243,6 +241,7 @@
 			}
 		}
 
+		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 		let hls = new Hls({fLoader: Loader, enableWorker: true});
 		Loader.handle_events(hls);
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
