@@ -1,10 +1,14 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="main.css">
+		<link rel="stylesheet" href="plyr.css" />
 		<script src="hls.min.js"></script>
+		<script src="plyr.js"></script>
 	</head>
 	<body>
-		<video id="player" controls="controls"></video>
+		<div class="video_area">
+			<video id="player" controls="controls"></video>
+		</div>
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
@@ -244,7 +248,46 @@
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 		let hls = new Hls({fLoader: Loader, enableWorker: true});
 		Loader.handle_events(hls);
-		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
+		// hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
+
+		// let playerx = new Plyr(document.getElementById('player'),
+		// {
+		// 	title: 'Example Title',
+		// 	markers:
+		// 	{
+		// 		enabled: false,
+		// 		points:
+		// 		[
+		// 			{ time: 100, label: "sas" },
+		// 			{ time: 200, label: "sis" },
+		// 			{ time: 1000, label: "garox" }
+		// 		]
+		// 	}
+		// });
+
+		playerx = new Plyr('#player', {invertTime: false});
+
+		playerx.source =
+		{
+			type: 'video',
+			title: 'Example title',
+			sources: [
+				// {
+				// src: '/path/to/movie.mp4',
+				// type: 'video/mp4',
+				// size: 720,
+				// },
+				{
+				src: 'http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8',
+				// type: 'application/vnd.apple.mpegurl',
+				size: 1080,
+				mode: "hls"
+				},
+			],
+		};
+
+		// let player = document.getElementById('player');
+		// plyr.setup(player);
 	</script>
 </html>

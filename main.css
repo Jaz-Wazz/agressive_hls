@@ -8,13 +8,20 @@ body
 	align-items: center;
 	justify-content: center;
 	background-color: #2F3136;
+	font-family: consolas;
 }
 
-video
+.video_area
 {
+	display: flex;
 	background-color: #202225;
 	height: 360px;
 	aspect-ratio: 16/9;
+}
+
+.plyr
+{
+	flex-grow: 1;
 }
 
 textarea
