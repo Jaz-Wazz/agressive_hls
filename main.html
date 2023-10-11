@@ -17,6 +17,9 @@
 				xhr.onload = resolve;
 				xhr.onprogress = on_progress;
 				xhr.onerror = reject;
+				xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+				xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+				xhr.setRequestHeader("Pragma", "no-cache");
 				xhr.send();
 			});
 		}
