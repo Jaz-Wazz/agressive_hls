@@ -135,6 +135,9 @@
 				let multiplier = 1000 / elapsed_time;
 				this.speed = event.loaded * multiplier;
 
+				// console.log(this.xhr.getAllResponseHeaders());
+				// console.log(this.xhr.status);
+
 				// Update statistics.
 				this.buffer.update_statistics();
 			}
@@ -148,6 +151,19 @@
 				this.xhr.send();
 			}
 		}
+
+		const observer = new PerformanceObserver((list) =>
+		{
+			list.getEntries().forEach((entry) =>
+			{
+				console.log(entry.name, entry.transferSize, entry.decodedBodySize);
+				// if(entry.transferSize === 0 && entry.decodedBodySize > 0) {
+				// console.log(`${entry.name} was loaded from cache`);
+				// }
+			});
+		});
+
+		observer.observe({ type: "resource", buffered: true });
 
 		class Loader
 		{
