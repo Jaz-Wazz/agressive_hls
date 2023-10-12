@@ -73,6 +73,18 @@
 				this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
 			}
 
+			handle_error(error, index)
+			{
+				if(error.type == "abort")
+				{
+					console.log(`Segment abort: `, index);
+				}
+				else
+				{
+					console.log(`Segment error: `, index, error);
+				}
+			}
+
 			has(index)
 			{
 				return this.segments.has(index);
@@ -86,6 +98,9 @@
 				// Abort all xhr requests, because destruct xhr object not aborted request.
 				this.segments.forEach((value, key) =>
 				{
+					// Propagate errors from rejected promises.
+					value.promise.catch((error) => this.handle_error(error, key));
+
 					// Abort request and reject linked promise.
 					value.xhr.onabort = value.xhr.onerror;
 					value.xhr.abort();
@@ -219,20 +234,11 @@
 					await this.buffer.move(index);
 				}
 
-				try
-				{
-					let buf = await this.buffer.take(index);
-					callbacks.onSuccess({data: buf}, {}, context);
-				}
-				catch(error)
-				{
-					// Ignore "abort" errors, because they a shutdown indicator.
-					if(error.type != "abort")
-					{
-						console.log("Wait sigment %i error!", index);
-						console.log(error);
-					}
-				}
+				this.buffer.take(index).then
+				(
+					(buf) => callbacks.onSuccess({data: buf}, {}, context),
+					(error) => buffer.handle_error(error, index)
+				);
 			}
 
 			abort()
