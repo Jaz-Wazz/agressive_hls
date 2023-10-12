@@ -13,6 +13,9 @@
 			/** @type Map<number, Segment> */
 			segments = new Map();
 
+			/** @type Promise */
+			playlist;
+
 			/** @type HTMLTextAreaElement */
 			text_area;
 
@@ -75,8 +78,11 @@
 				return this.segments.has(index);
 			}
 
-			move(index, playlist)
+			async move(index)
 			{
+				// Async wait playlist information.
+				let playlist = await this.playlist;
+
 				// Abort all xhr requests, because destruct xhr object not aborted request.
 				this.segments.forEach((value, key) =>
 				{
@@ -95,8 +101,11 @@
 				}
 			}
 
-			async take(index, playlist)
+			async take(index)
 			{
+				// Async wait playlist information.
+				let playlist = await this.playlist;
+
 				// Async wait requested segment.
 				let result = await this.segments.get(index).promise;
 
@@ -109,6 +118,17 @@
 
 				// Return requested segment data.
 				return result.target.response;
+			}
+
+			handle_events(hls)
+			{
+				this.playlist = new Promise((resolve, reject) =>
+				{
+					hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
+					{
+						resolve(data.details.fragments);
+					});
+				});
 			}
 		}
 
@@ -176,22 +196,8 @@
 
 		class Loader extends Hls.DefaultConfig.loader
 		{
-			/** @type Promise */
-			static playlist;
-
 			/** @type Buffer */
 			buffer;
-
-			static handle_events(hls)
-			{
-				Loader.playlist = new Promise((resolve, reject) =>
-				{
-					hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
-					{
-						resolve(data.details.fragments);
-					});
-				});
-			}
 
 			constructor(config)
 			{
@@ -202,7 +208,6 @@
 			async load(context, config, callbacks)
 			{
 				let index = context.frag.sn;
-				let playlist = await Loader.playlist;
 
 				if(this.buffer.has(index))
 				{
@@ -211,12 +216,12 @@
 				else
 				{
 					console.log("MISS %i", index);
-					this.buffer.move(index, playlist);
+					await this.buffer.move(index);
 				}
 
 				try
 				{
-					let buf = await this.buffer.take(index, playlist);
+					let buf = await this.buffer.take(index);
 					callbacks.onSuccess({data: buf}, {}, context);
 				}
 				catch(error)
@@ -238,7 +243,7 @@
 
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 		let hls = new Hls({fLoader: Loader, buffer: buffer, enableWorker: true});
-		Loader.handle_events(hls);
+		buffer.handle_events(hls);
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
 	</script>
