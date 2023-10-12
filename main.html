@@ -8,7 +8,7 @@
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
-		let hls = new Hls({enableWorker: true});
+		let hls = new Hls({enableWorker: true, progressive: true});
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
 	</script>
