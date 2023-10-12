@@ -48,24 +48,21 @@
 				this.segments.forEach((value, key) =>
 				{
 					let speed_relative_average_speed = (value.speed / this.average_speed);
-
 					let status_by_sras = "wait";
 
 					if((new Date().getTime()) > value.start_point + 8000)
 					{
-						status_by_sras = (speed_relative_average_speed	> 0.5) ? "good" : "bad";
+						status_by_sras = (speed_relative_average_speed > 0.5) ? "good" : "bad";
 					}
 
-					this.text_area.textContent += key.toString().padStart(7);
-					this.text_area.textContent += this.format(value.speed).padStart(13);
-					this.text_area.textContent += speed_relative_average_speed.toFixed(2).toString().padStart(6);
-					this.text_area.textContent += status_by_sras.padStart(7);
-					this.text_area.textContent += "\n";
+					this.text_area.textContent += ""
+					+ key.toString().padStart(7)
+					+ this.format(value.speed).padStart(13)
+					+ speed_relative_average_speed.toFixed(2).toString().padStart(6)
+					+ status_by_sras.padStart(7)
+					+ "\n";
 
-					if(status_by_sras == "bad")
-					{
-						value.abort_and_retry();
-					}
+					if(status_by_sras == "bad") value.abort_and_retry();
 				});
 
 				// Print other statistics.
