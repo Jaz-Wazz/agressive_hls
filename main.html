@@ -32,7 +32,7 @@
 				return (size / 131072).toFixed(2) + " mbit/s";
 			}
 
-			update_statistics()
+			on_progress()
 			{
 				// Update total speed.
 				this.total_speed = 0;
@@ -107,7 +107,7 @@
 					// Connect callbacks.
 					this.xhr.onload = resolve;
 					this.xhr.onerror = reject;
-					this.xhr.onprogress = (event) => this.on_progress(event);
+					this.xhr.onprogress = (event) => { this.on_progress(event); this.buffer.on_progress(); };
 
 					// Supress browser cache.
 					this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
@@ -125,9 +125,6 @@
 				let elapsed_time = new Date().getTime() - this.start_point;
 				let multiplier = 1000 / elapsed_time;
 				this.speed = event.loaded * multiplier;
-
-				// Update statistics.
-				this.buffer.update_statistics();
 			}
 
 			abort_and_retry()
