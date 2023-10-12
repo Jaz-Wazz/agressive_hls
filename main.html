@@ -69,6 +69,54 @@
 				this.text_area.textContent += `Average speed: ${this.format(this.average_speed)}.\n`;
 				this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
 			}
+
+			has(index)
+			{
+				return this.segments.has(index);
+			}
+
+			grow(playlist)
+			{
+				while(this.segments.size < 6)
+				{
+					let next_index = Math.max(... this.segments.keys()) + 1;
+					this.segments.set(next_index, new Segment(this, playlist[next_index].url));
+				}
+			}
+
+			move(index, playlist)
+			{
+				// Abort all xhr requests, because destruct xhr object not aborted request.
+				this.segments.forEach((value, key) =>
+				{
+					// Abort request and reject linked promise.
+					value.xhr.onabort = value.xhr.onerror;
+					value.xhr.abort();
+				});
+
+				// Clear buffer.
+				this.segments.clear();
+
+				// Fill buffer.
+				for(let i = index; this.segments.size < 6; i++)
+				{
+					let segment = new Segment(this, playlist[i].url);
+					this.segments.set(i, segment);
+				}
+			}
+
+			async take(index, playlist)
+			{
+				// Wait segment.
+				let segment = this.segments.get(index);
+				let result = await segment.promise;
+				let buf = result.target.response;
+
+				this.segments.delete(index);
+				this.grow(playlist);
+
+				return buf;
+			}
 		}
 
 		class Segment
@@ -154,59 +202,21 @@
 				let index = context.frag.sn;
 				let playlist = await Loader.playlist;
 
-				if(buffer.segments.has(index))
+				if(buffer.has(index))
 				{
-					// Buffer hit: Monotonic playing.
 					console.log("HIT %i", index);
-
-					// Grow buffer.
-					while(buffer.segments.size < 6)
-					{
-						let next_index = Math.max(... buffer.segments.keys()) + 1;
-						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
-					}
+					// buffer.grow(playlist);
 				}
 				else
 				{
-					// Buffer miss: Start or Seek.
 					console.log("MISS %i", index);
-
-					// Abort all xhr requests, because destruct xhr object not aborted request.
-					buffer.segments.forEach((value, key) =>
-					{
-						// Abort request and reject linked promise.
-						value.xhr.onabort = value.xhr.onerror;
-						value.xhr.abort();
-					});
-
-					// Clear buffer.
-					buffer.segments.clear();
-
-					// Fill buffer.
-					for(let i = index; buffer.segments.size < 6; i++)
-					{
-						let segment = new Segment(buffer, playlist[i].url);
-						buffer.segments.set(i, segment);
-					}
+					buffer.move(index, playlist);
 				}
 
 				try
 				{
-					// Wait segment.
-					let segment = buffer.segments.get(index);
-					let result = await segment.promise;
-					let buf = result.target.response;
-
-					// Return segment.
+					let buf = await buffer.take(index, playlist);
 					callbacks.onSuccess({data: buf}, {}, context);
-					buffer.segments.delete(index);
-
-					// Grow buffer.
-					while(buffer.segments.size < 6)
-					{
-						let next_index = Math.max(... buffer.segments.keys()) + 1;
-						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
-					}
 				}
 				catch(error)
 				{
@@ -224,6 +234,16 @@
 				// Api stub to supress errors and ignore "abort" events.
 			}
 		}
+
+		// Buffer.handle_events();
+		// Loader
+
+		// let buffer = new Buffer();
+		// let hls = new Hls({fLoader: Loader, enableWorker: true, buffer: buffer});
+
+		// ParallelHls.Buffer();
+		// AgressiveHls.Buffer;
+		// AgressiveHls.Loader;
 
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 		let hls = new Hls({fLoader: Loader, enableWorker: true});
