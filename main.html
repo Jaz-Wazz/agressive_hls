@@ -8,28 +8,245 @@
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
+		function fake_fetch(xhr, method, url, on_progress)
+		{
+			return new Promise((resolve, reject) =>
+			{
+				xhr.responseType = "arraybuffer";
+				xhr.open(method, url);
+				xhr.onload = resolve;
+				xhr.onprogress = on_progress;
+				xhr.onerror = reject;
+				xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+				xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+				xhr.setRequestHeader("Pragma", "no-cache");
+				xhr.send();
+			});
+		}
+
+		class Buffer
+		{
+			/** @type Map<number, Segment> */
+			segments = new Map();
+
+			/** @type HTMLTextAreaElement */
+			text_area;
+
+			/** @type number */
+			average_speed = 0;
+
+			/** @type number */
+			total_speed = 0;
+
+			/** @type number */
+			max_speed = 0;
+
+			constructor(text_area)
+			{
+				this.text_area = text_area;
+			}
+
+			format(size)
+			{
+				return (size / 131072).toFixed(2) + " mbit/s";
+			}
+
+			update_statistics()
+			{
+				// Update total speed.
+				this.total_speed = 0;
+				this.segments.forEach(value => { this.total_speed += value.speed; });
+
+				// Update average speed.
+				this.average_speed = this.total_speed / this.segments.size;
+
+				// Update Max speed.
+				let speeds = new Array;
+				this.segments.forEach(value => { speeds.push(value.speed); });
+				this.max_speed = Math.max(... speeds);
+
+				// Print header.
+				this.text_area.textContent = "Segment        Speed  SrAS  SrMS  sSrAS  sSrMS\n";
+
+				// Print rows.
+				this.segments.forEach((value, key) =>
+				{
+					let speed_relative_average_speed = (value.speed / this.average_speed);
+					let speed_relative_max_speed = (value.speed / this.max_speed);
+
+					let status_by_sras = "wait";
+					let status_by_srms = "wait";
+
+					if((new Date().getTime()) > value.start_point + 8000)
+					{
+						status_by_sras = (speed_relative_average_speed	> 0.5) ? "good" : "bad";
+						status_by_srms = (speed_relative_max_speed		> 0.5) ? "good" : "bad";
+					}
+
+					this.text_area.textContent += key.toString().padStart(7);
+					this.text_area.textContent += this.format(value.speed).padStart(13);
+					this.text_area.textContent += speed_relative_average_speed.toFixed(2).toString().padStart(6);
+					this.text_area.textContent += speed_relative_max_speed.toFixed(2).toString().padStart(6);
+					this.text_area.textContent += status_by_sras.padStart(7);
+					this.text_area.textContent += status_by_srms.padStart(7);
+					this.text_area.textContent += "\n";
+
+					if(status_by_sras == "bad")
+					{
+						value.abort_and_retry();
+					}
+				});
+
+				// Print other statistics.
+				this.text_area.textContent += `Average speed: ${this.format(this.average_speed)}.\n`;
+				this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
+				this.text_area.textContent += `Max speed: ${this.format(this.max_speed)}.\n`;
+			}
+		}
+
+		class Segment
+		{
+			/** @type XMLHttpRequest */
+			xhr = new XMLHttpRequest();
+
+			/** @type Promise */
+			promise;
+
+			/** @type number */
+			speed = 0;
+
+			/** @type number */
+			start_point = new Date().getTime();
+
+			/** @type Buffer */
+			buffer;
+
+			/** @type Url */
+			url;
+
+			constructor(associated_buffer, segment_url)
+			{
+				this.buffer = associated_buffer;
+				this.promise = fake_fetch(this.xhr, "GET", segment_url, (event) => { this.on_progress(event); });
+				this.url = segment_url;
+			}
+
+			on_progress(event)
+			{
+				// Update segment speed.
+				let elapsed_time = new Date().getTime() - this.start_point;
+				let multiplier = 1000 / elapsed_time;
+				this.speed = event.loaded * multiplier;
+
+				// Update statistics.
+				this.buffer.update_statistics();
+			}
+
+			abort_and_retry()
+			{
+				this.xhr.abort();
+				this.xhr.open("GET", this.url);
+				this.speed = 0;
+				this.start_point = new Date().getTime();
+				this.xhr.send();
+			}
+		}
+
 		class Loader extends Hls.DefaultConfig.loader
 		{
-			constructor(config)
+			/** @type Promise */
+			static playlist;
+
+			static handle_events(hls)
 			{
-				super(config);
-				var load = this.load.bind(this);
-
-				this.load = async function(context, config, callbacks)
+				Loader.playlist = new Promise((resolve, reject) =>
 				{
-					let url = new URL(context.url);
-					let filename = url.pathname.split('/').pop();
-					let index = parseInt(filename.match(/\d+/)[0]);
-
-					console.log('Load segment: [Index: %i, Url: %s].', index, url.toString());
-					let response = await fetch(url);
-					let buf = await response.arrayBuffer();
-					callbacks.onSuccess({data: buf}, {}, context);
-				};
+					hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
+					{
+						resolve(data.details.fragments);
+					});
+				});
 			}
-		};
 
+			async load(context, config, callbacks)
+			{
+				let index = context.frag.sn;
+				let playlist = await Loader.playlist;
+
+				if(buffer.segments.has(index))
+				{
+					// Buffer hit: Monotonic playing.
+					console.log("HIT %i", index);
+
+					// Grow buffer.
+					while(buffer.segments.size < 6)
+					{
+						let next_index = Math.max(... buffer.segments.keys()) + 1;
+						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
+					}
+				}
+				else
+				{
+					// Buffer miss: Start or Seek.
+					console.log("MISS %i", index);
+
+					// Abort all xhr requests, because destruct xhr object not aborted request.
+					buffer.segments.forEach((value, key) =>
+					{
+						// Abort request and reject linked promise.
+						value.xhr.onabort = value.xhr.onerror;
+						value.xhr.abort();
+					});
+
+					// Clear buffer.
+					buffer.segments.clear();
+
+					// Fill buffer.
+					for(let i = index; buffer.segments.size < 6; i++)
+					{
+						let segment = new Segment(buffer, playlist[i].url);
+						buffer.segments.set(i, segment);
+					}
+				}
+
+				try
+				{
+					// Wait segment.
+					let segment = buffer.segments.get(index);
+					let result = await segment.promise;
+					let buf = result.target.response;
+
+					// Return segment.
+					callbacks.onSuccess({data: buf}, {}, context);
+					buffer.segments.delete(index);
+
+					// Grow buffer.
+					while(buffer.segments.size < 6)
+					{
+						let next_index = Math.max(... buffer.segments.keys()) + 1;
+						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
+					}
+				}
+				catch(error)
+				{
+					// Ignore "abort" errors, because they a shutdown indicator.
+					if(error.type != "abort")
+					{
+						console.log("Wait sigment %i error!", index);
+						console.log(error);
+					}
+				}
+			}
+
+			abort()
+			{
+				// Api stub to supress errors and ignore "abort" events.
+			}
+		}
+
+		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
 		let hls = new Hls({fLoader: Loader, enableWorker: true});
+		Loader.handle_events(hls);
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
 	</script>
