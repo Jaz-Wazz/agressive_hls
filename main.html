@@ -8,22 +8,6 @@
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
-		function fake_fetch(xhr, method, url, on_progress)
-		{
-			return new Promise((resolve, reject) =>
-			{
-				xhr.responseType = "arraybuffer";
-				xhr.open(method, url);
-				xhr.onload = resolve;
-				xhr.onprogress = on_progress;
-				xhr.onerror = reject;
-				xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
-				xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
-				xhr.setRequestHeader("Pragma", "no-cache");
-				xhr.send();
-			});
-		}
-
 		class Buffer
 		{
 			/** @type Map<number, Segment> */
@@ -116,9 +100,30 @@
 
 			constructor(associated_buffer, segment_url)
 			{
+				// Initialize members.
 				this.buffer = associated_buffer;
-				this.promise = fake_fetch(this.xhr, "GET", segment_url, (event) => { this.on_progress(event); });
 				this.url = segment_url;
+
+				// Start async task and take his promise.
+				this.promise = new Promise((resolve, reject) =>
+				{
+					// Configure xhr object.
+					this.xhr.open("GET", segment_url);
+					this.xhr.responseType = "arraybuffer";
+
+					// Connect callbacks.
+					this.xhr.onload = resolve;
+					this.xhr.onerror = reject;
+					this.xhr.onprogress = (event) => this.on_progress(event);
+
+					// Supress browser cache.
+					this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+					this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+					this.xhr.setRequestHeader("Pragma", "no-cache");
+
+					// Send request.
+					this.xhr.send();
+				});
 			}
 
 			on_progress(event)
