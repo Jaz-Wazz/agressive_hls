@@ -179,6 +179,9 @@
 			/** @type Promise */
 			static playlist;
 
+			/** @type Buffer */
+			buffer;
+
 			static handle_events(hls)
 			{
 				Loader.playlist = new Promise((resolve, reject) =>
@@ -190,24 +193,30 @@
 				});
 			}
 
+			constructor(config)
+			{
+				super(config);
+				this.buffer = config.buffer;
+			}
+
 			async load(context, config, callbacks)
 			{
 				let index = context.frag.sn;
 				let playlist = await Loader.playlist;
 
-				if(buffer.has(index))
+				if(this.buffer.has(index))
 				{
 					console.log("HIT %i", index);
 				}
 				else
 				{
 					console.log("MISS %i", index);
-					buffer.move(index, playlist);
+					this.buffer.move(index, playlist);
 				}
 
 				try
 				{
-					let buf = await buffer.take(index, playlist);
+					let buf = await this.buffer.take(index, playlist);
 					callbacks.onSuccess({data: buf}, {}, context);
 				}
 				catch(error)
@@ -227,18 +236,8 @@
 			}
 		}
 
-		// Buffer.handle_events();
-		// Loader
-
-		// let buffer = new Buffer();
-		// let hls = new Hls({fLoader: Loader, enableWorker: true, buffer: buffer});
-
-		// ParallelHls.Buffer();
-		// AgressiveHls.Buffer;
-		// AgressiveHls.Loader;
-
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
-		let hls = new Hls({fLoader: Loader, enableWorker: true});
+		let hls = new Hls({fLoader: Loader, buffer: buffer, enableWorker: true});
 		Loader.handle_events(hls);
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
