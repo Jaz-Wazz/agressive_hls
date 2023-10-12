@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="main.css">
-		<script src="hls.min.js"></script>
+		<script src="hls.js"></script>
 	</head>
 	<body>
 		<video id="player" controls="controls"></video>
@@ -152,7 +152,7 @@
 			}
 		}
 
-		class Loader
+		class Loader extends Hls.DefaultConfig.loader
 		{
 			/** @type Promise */
 			static playlist;
