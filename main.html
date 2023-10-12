@@ -91,8 +91,7 @@
 				// Fill buffer.
 				for(let i = index; this.segments.size < 6; i++)
 				{
-					let segment = new Segment(this, playlist[i].url);
-					this.segments.set(i, segment);
+					this.segments.set(i, new Segment(this, playlist[i].url));
 				}
 			}
 
