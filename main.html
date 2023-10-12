@@ -85,16 +85,12 @@
 			/** @type number */
 			start_point = new Date().getTime();
 
-			/** @type Buffer */
-			buffer;
-
 			/** @type Url */
 			url;
 
-			constructor(associated_buffer, segment_url)
+			constructor(buffer, segment_url)
 			{
-				// Initialize members.
-				this.buffer = associated_buffer;
+				// Initialize url member.
 				this.url = segment_url;
 
 				// Start async task and take his promise.
@@ -107,7 +103,7 @@
 					// Connect callbacks.
 					this.xhr.onload = resolve;
 					this.xhr.onerror = reject;
-					this.xhr.onprogress = (event) => { this.on_progress(event); this.buffer.on_progress(); };
+					this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
 
 					// Supress browser cache.
 					this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
