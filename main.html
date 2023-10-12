@@ -38,9 +38,6 @@
 			/** @type number */
 			total_speed = 0;
 
-			/** @type number */
-			max_speed = 0;
-
 			constructor(text_area)
 			{
 				this.text_area = text_area;
@@ -63,32 +60,26 @@
 				// Update Max speed.
 				let speeds = new Array;
 				this.segments.forEach(value => { speeds.push(value.speed); });
-				this.max_speed = Math.max(... speeds);
 
 				// Print header.
-				this.text_area.textContent = "Segment        Speed  SrAS  SrMS  sSrAS  sSrMS\n";
+				this.text_area.textContent = "Segment        Speed  SrAS  sSrAS\n";
 
 				// Print rows.
 				this.segments.forEach((value, key) =>
 				{
 					let speed_relative_average_speed = (value.speed / this.average_speed);
-					let speed_relative_max_speed = (value.speed / this.max_speed);
 
 					let status_by_sras = "wait";
-					let status_by_srms = "wait";
 
 					if((new Date().getTime()) > value.start_point + 8000)
 					{
 						status_by_sras = (speed_relative_average_speed	> 0.5) ? "good" : "bad";
-						status_by_srms = (speed_relative_max_speed		> 0.5) ? "good" : "bad";
 					}
 
 					this.text_area.textContent += key.toString().padStart(7);
 					this.text_area.textContent += this.format(value.speed).padStart(13);
 					this.text_area.textContent += speed_relative_average_speed.toFixed(2).toString().padStart(6);
-					this.text_area.textContent += speed_relative_max_speed.toFixed(2).toString().padStart(6);
 					this.text_area.textContent += status_by_sras.padStart(7);
-					this.text_area.textContent += status_by_srms.padStart(7);
 					this.text_area.textContent += "\n";
 
 					if(status_by_sras == "bad")
@@ -100,7 +91,6 @@
 				// Print other statistics.
 				this.text_area.textContent += `Average speed: ${this.format(this.average_speed)}.\n`;
 				this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
-				this.text_area.textContent += `Max speed: ${this.format(this.max_speed)}.\n`;
 			}
 		}
 
