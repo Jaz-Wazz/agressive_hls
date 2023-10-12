@@ -41,10 +41,6 @@
 				// Update average speed.
 				this.average_speed = this.total_speed / this.segments.size;
 
-				// Update Max speed.
-				let speeds = new Array;
-				this.segments.forEach(value => { speeds.push(value.speed); });
-
 				// Print header.
 				this.text_area.textContent = "Segment        Speed  SrAS  sSrAS\n";
 
