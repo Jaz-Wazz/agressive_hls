@@ -237,7 +237,7 @@
 				this.buffer.take(index).then
 				(
 					(buf) => callbacks.onSuccess({data: buf}, {}, context),
-					(error) => buffer.handle_error(error, index)
+					(error) => { if(error.type != "abort") console.log(`Segment error: `, index, error); }
 				);
 			}
 
