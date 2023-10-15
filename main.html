@@ -1,7 +1,6 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="main.css">
-		<script src="hls.js"></script>
 		<script src="agressive_hls.js"></script>
 	</head>
 	<body>
@@ -9,10 +8,7 @@
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
-		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
-		let hls = new Hls({fLoader: Loader, buffer: buffer, enableWorker: true});
-		buffer.handle_events(hls);
-		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
-		hls.attachMedia(player);
+
+
 	</script>
 </html>
