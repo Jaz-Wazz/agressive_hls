@@ -1,23 +1,15 @@
 {
-    "compilerOptions": {
-      "module": "commonjs",
-      "target": "es6",
-      "checkJs": true,
-      "allowJs": true,
-      "noEmit": true,
-      "strict": false,
-      "moduleResolution": "node",
-      "baseUrl": ".",
-      "paths": {
-        "*": [
-          "*"
-        ]
-      }
-    },
-    "include": [
-      "**/*"
-    ],
-    "exclude": [
-      "**/node_modules/*"
-    ]
+	"compilerOptions":
+	{
+		"module": "commonjs",
+		"target": "es6",
+		"checkJs": true,
+		"allowJs": true,
+		"noEmit": true,
+		"strict": false,
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"paths": {"*": ["*"]}
+	},
+	"include": ["**/*"]
 }
