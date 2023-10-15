@@ -1,7 +1,4 @@
-/**
-* @type {import('./agressive_hls.js').MyType}
-*/
-let myVar;
+import {Garox} from "agressive_hls";
 
-
-// import("agressive_hls.js")
+let x = new Garox;
+x.sas = 42;
