@@ -85,11 +85,6 @@
 				}
 			}
 
-			has(index)
-			{
-				return this.segments.has(index);
-			}
-
 			async move(index)
 			{
 				// Async wait playlist information.
@@ -118,6 +113,12 @@
 
 			async take(index)
 			{
+				// Log requested segment status.
+				console.log(this.segments.has(index) ? "Segment hit" : "Segment miss", index);
+
+				// Move buffer on miss.
+				if(!this.segments.has(index)) await this.move(index);
+
 				// Async wait playlist information.
 				let playlist = await this.playlist;
 
@@ -222,19 +223,7 @@
 
 			async load(context, config, callbacks)
 			{
-				let index = context.frag.sn;
-
-				if(this.buffer.has(index))
-				{
-					console.log("HIT %i", index);
-				}
-				else
-				{
-					console.log("MISS %i", index);
-					await this.buffer.move(index);
-				}
-
-				this.buffer.take(index).then
+				this.buffer.take(context.frag.sn).then
 				(
 					(buf) => callbacks.onSuccess({data: buf}, {}, context),
 					(error) => { if(error.type != "abort") console.log(`Segment error: `, index, error); }
