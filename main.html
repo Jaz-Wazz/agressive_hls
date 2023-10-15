@@ -77,11 +77,11 @@
 			{
 				if(error.type == "abort")
 				{
-					console.log(`Segment abort: `, index);
+					console.log("Segment abort:", index);
 				}
 				else
 				{
-					console.log(`Segment error: `, index, error);
+					console.log("Segment error:", index, error);
 				}
 			}
 
@@ -114,7 +114,7 @@
 			async take(index)
 			{
 				// Log requested segment status.
-				console.log(this.segments.has(index) ? "Segment hit" : "Segment miss", index);
+				console.log(this.segments.has(index) ? "Segment hit:" : "Segment miss:", index);
 
 				// Move buffer on miss.
 				if(!this.segments.has(index)) await this.move(index);
@@ -226,7 +226,7 @@
 				this.buffer.take(context.frag.sn).then
 				(
 					(buf) => callbacks.onSuccess({data: buf}, {}, context),
-					(error) => { if(error.type != "abort") console.log(`Segment error: `, index, error); }
+					(error) => { if(error.type != "abort") console.log("Segment error:", index, error); }
 				);
 			}
 
