@@ -13,6 +13,9 @@
 			/** @type Map<number, Segment> */
 			segments = new Map();
 
+			/** @type Promise */
+			playlist;
+
 			/** @type HTMLTextAreaElement */
 			text_area;
 
@@ -68,6 +71,80 @@
 				// Print other statistics.
 				this.text_area.textContent += `Average speed: ${this.format(this.average_speed)}.\n`;
 				this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
+			}
+
+			handle_error(error, index)
+			{
+				if(error.type == "abort")
+				{
+					console.log("Segment abort:", index);
+				}
+				else
+				{
+					console.log("Segment error:", index, error);
+				}
+			}
+
+			async move(index)
+			{
+				// Async wait playlist information.
+				let playlist = await this.playlist;
+
+				// Abort all xhr requests, because destruct xhr object not aborted request.
+				this.segments.forEach((value, key) =>
+				{
+					// Propagate errors from rejected promises.
+					value.promise.catch((error) => this.handle_error(error, key));
+
+					// Abort request and reject linked promise.
+					value.xhr.onabort = value.xhr.onerror;
+					value.xhr.abort();
+				});
+
+				// Clear buffer.
+				this.segments.clear();
+
+				// Fill buffer.
+				for(let i = index; this.segments.size < 6; i++)
+				{
+					this.segments.set(i, new Segment(this, playlist[i].url));
+				}
+			}
+
+			async take(index)
+			{
+				// Log requested segment status.
+				console.log(this.segments.has(index) ? "Segment hit:" : "Segment miss:", index);
+
+				// Move buffer on miss.
+				if(!this.segments.has(index)) await this.move(index);
+
+				// Async wait playlist information.
+				let playlist = await this.playlist;
+
+				// Async wait requested segment.
+				let result = await this.segments.get(index).promise;
+
+				// Remove requested segment from buffer.
+				this.segments.delete(index);
+
+				// Predict and add next segment.
+				let next_index = Math.max(... this.segments.keys()) + 1;
+				this.segments.set(next_index, new Segment(this, playlist[next_index].url));
+
+				// Return requested segment data.
+				return result.target.response;
+			}
+
+			handle_events(hls)
+			{
+				this.playlist = new Promise((resolve, reject) =>
+				{
+					hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
+					{
+						resolve(data.details.fragments);
+					});
+				});
 			}
 		}
 
@@ -135,88 +212,22 @@
 
 		class Loader extends Hls.DefaultConfig.loader
 		{
-			/** @type Promise */
-			static playlist;
+			/** @type Buffer */
+			buffer;
 
-			static handle_events(hls)
+			constructor(config)
 			{
-				Loader.playlist = new Promise((resolve, reject) =>
-				{
-					hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
-					{
-						resolve(data.details.fragments);
-					});
-				});
+				super(config);
+				this.buffer = config.buffer;
 			}
 
 			async load(context, config, callbacks)
 			{
-				let index = context.frag.sn;
-				let playlist = await Loader.playlist;
-
-				if(buffer.segments.has(index))
-				{
-					// Buffer hit: Monotonic playing.
-					console.log("HIT %i", index);
-
-					// Grow buffer.
-					while(buffer.segments.size < 6)
-					{
-						let next_index = Math.max(... buffer.segments.keys()) + 1;
-						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
-					}
-				}
-				else
-				{
-					// Buffer miss: Start or Seek.
-					console.log("MISS %i", index);
-
-					// Abort all xhr requests, because destruct xhr object not aborted request.
-					buffer.segments.forEach((value, key) =>
-					{
-						// Abort request and reject linked promise.
-						value.xhr.onabort = value.xhr.onerror;
-						value.xhr.abort();
-					});
-
-					// Clear buffer.
-					buffer.segments.clear();
-
-					// Fill buffer.
-					for(let i = index; buffer.segments.size < 6; i++)
-					{
-						let segment = new Segment(buffer, playlist[i].url);
-						buffer.segments.set(i, segment);
-					}
-				}
-
-				try
-				{
-					// Wait segment.
-					let segment = buffer.segments.get(index);
-					let result = await segment.promise;
-					let buf = result.target.response;
-
-					// Return segment.
-					callbacks.onSuccess({data: buf}, {}, context);
-					buffer.segments.delete(index);
-
-					// Grow buffer.
-					while(buffer.segments.size < 6)
-					{
-						let next_index = Math.max(... buffer.segments.keys()) + 1;
-						buffer.segments.set(next_index, new Segment(buffer, playlist[next_index].url));
-					}
-				}
-				catch(error)
-				{
-					// Ignore "abort" errors, because they a shutdown indicator.
-					if(error.type != "abort")
-					{
-						console.log("Wait sigment %i error!", index);
-						console.log(error);
-					}
-				}
+				this.buffer.take(context.frag.sn).then
+				(
+					(buf) => callbacks.onSuccess({data: buf}, {}, context),
+					(error) => { if(error.type != "abort") console.log("Segment error:", index, error); }
+				);
 			}
 
 			abort()
@@ -226,8 +237,8 @@
 		}
 
 		let buffer = new Buffer(document.getElementsByTagName("textarea")[0]);
-		let hls = new Hls({fLoader: Loader, enableWorker: true});
-		Loader.handle_events(hls);
+		let hls = new Hls({fLoader: Loader, buffer: buffer, enableWorker: true});
+		buffer.handle_events(hls);
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
 	</script>
