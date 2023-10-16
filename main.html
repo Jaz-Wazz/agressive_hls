@@ -20,7 +20,7 @@
 		let buffer = new AgressiveHls.Buffer(stats_overlay);
 
 		// Make hls loader.
-		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true});
+		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true, autoStartLoad: false});
 		buffer.handle_events(hls);
 
 		// Make plyr player and integrate logger overlay.
@@ -33,6 +33,13 @@
 		stats_button.innerHTML = `<img src="stats.svg"></img>`;
 		stats_button.onclick = () => stats_overlay.style.display = stats_overlay.style.display == "none" ? "block" : "none";
 		plyr.elements.volume.after(stats_button);
+
+		// Handle play event for start deferred load.
+		document.getElementById("player").onplay = () =>
+		{
+			hls.startLoad();
+			document.getElementById("player").onplay = () => {};
+		};
 
 		// Load sourses.
 		window.onload = () =>
