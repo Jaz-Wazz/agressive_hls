@@ -9,18 +9,22 @@
 	</head>
 	<body>
 		<video id="player" controls="controls"></video>
-		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
-		// Make agressive hls buffer.
-		let buffer = new AgressiveHls.Buffer(document.getElementsByTagName("textarea")[0]);
+		// Make logger overlay html element.
+		let logger_overlay = document.createElement("textarea");
+		logger_overlay.spellcheck = "false";
 
-		// Make hls with custom loader.
+		// Make hls buffer with output to logger overlay.
+		let buffer = new AgressiveHls.Buffer(logger_overlay);
+
+		// Make hls loader.
 		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true});
 		buffer.handle_events(hls);
 
-		// Make plyr player.
+		// Make plyr player and integrate logger overlay.
 		let plyr = new Plyr('#player', {invertTime: false});
+		plyr.elements.container.append(logger_overlay);
 
 		// Load sourses.
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
