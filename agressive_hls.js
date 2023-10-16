@@ -139,12 +139,8 @@ let AgressiveHls =
 			}
 		}
 
-		async move(index)
+		abort_all()
 		{
-			// Async wait playlist information.
-			let playlist = await this.playlist;
-
-			// Abort all xhr requests, because destruct xhr object not aborted request.
 			this.segments.forEach((value, key) =>
 			{
 				// Propagate errors from rejected promises.
@@ -154,6 +150,15 @@ let AgressiveHls =
 				value.xhr.onabort = value.xhr.onerror;
 				value.xhr.abort();
 			});
+		}
+
+		async move(index)
+		{
+			// Async wait playlist information.
+			let playlist = await this.playlist;
+
+			// Abort all xhr requests, because destruct xhr object not aborted request.
+			this.abort_all();
 
 			// Clear buffer.
 			this.segments.clear();
