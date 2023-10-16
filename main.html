@@ -35,7 +35,10 @@
 		plyr.elements.volume.after(stats_button);
 
 		// Load sourses.
-		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
-		hls.attachMedia(player);
+		window.onload = () =>
+		{
+			hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
+			hls.attachMedia(player);
+		};
 	</script>
 </html>
