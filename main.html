@@ -14,6 +14,7 @@
 		// Make stats overlay.
 		let stats_overlay = document.createElement("textarea");
 		stats_overlay.spellcheck = "false";
+		stats_overlay.style.display = "none";
 
 		// Make hls buffer with output to logger overlay.
 		let buffer = new AgressiveHls.Buffer(stats_overlay);
