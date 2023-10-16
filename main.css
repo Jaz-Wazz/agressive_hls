@@ -37,3 +37,11 @@ textarea
 	color: rgb(227, 227, 227);
 	resize: none;
 }
+
+.plyr__control > img
+{
+	filter: invert(100%);
+	width: 18px;
+	height: 18px;
+	display: block;
+}
