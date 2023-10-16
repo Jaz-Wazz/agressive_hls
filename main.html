@@ -2,7 +2,9 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="main.css">
+		<link rel="stylesheet" href="plyr.css">
 		<script src="hls.js"></script>
+		<script src="plyr.js"></script>
 		<script src="agressive_hls.js"></script>
 	</head>
 	<body>
@@ -10,9 +12,17 @@
 		<textarea spellcheck="false"></textarea>
 	</body>
 	<script>
+		// Make agressive hls buffer.
 		let buffer = new AgressiveHls.Buffer(document.getElementsByTagName("textarea")[0]);
+
+		// Make hls with custom loader.
 		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true});
 		buffer.handle_events(hls);
+
+		// Make plyr player.
+		let plyr = new Plyr('#player', {invertTime: false});
+
+		// Load sourses.
 		hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
 		hls.attachMedia(player);
 	</script>

@@ -1,3 +1,10 @@
+*
+{
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
 body
 {
 	margin: 0;
@@ -8,9 +15,10 @@ body
 	align-items: center;
 	justify-content: center;
 	background-color: #2F3136;
+	font-family: "Consolas";
 }
 
-video
+.plyr
 {
 	background-color: #202225;
 	height: 360px;
