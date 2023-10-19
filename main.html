@@ -23,16 +23,20 @@
 		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true, autoStartLoad: false});
 		buffer.handle_events(hls);
 
-		// Make plyr player and integrate logger overlay.
-		let plyr = new Plyr('#player', {invertTime: false});
-		plyr.elements.container.append(stats_overlay);
+		// Check browser support plyr.
+		if(Plyr != undefined)
+		{
+			// Make plyr player and integrate logger overlay.
+			let plyr = new Plyr('#player', {invertTime: false});
+			plyr.elements.container.append(stats_overlay);
 
-		// Add custom plyr stats button.
-		let stats_button = document.createElement("button");
-		stats_button.className = "plyr__control";
-		stats_button.innerHTML = `<img src="stats.svg"></img>`;
-		stats_button.onclick = () => stats_overlay.style.display = stats_overlay.style.display == "none" ? "block" : "none";
-		plyr.elements.volume.after(stats_button);
+			// Add custom plyr stats button.
+			let stats_button = document.createElement("button");
+			stats_button.className = "plyr__control";
+			stats_button.innerHTML = `<img src="stats.svg"></img>`;
+			stats_button.onclick = () => stats_overlay.style.display = stats_overlay.style.display == "none" ? "block" : "none";
+			plyr.elements.volume.after(stats_button);
+		}
 
 		// Handle play event for start deferred load.
 		document.getElementById("player").onplay = () =>
