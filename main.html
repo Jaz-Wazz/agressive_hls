@@ -24,7 +24,7 @@
 		buffer.handle_events(hls);
 
 		// Check browser support plyr.
-		if(Plyr != undefined)
+		if(Plyr != null)
 		{
 			// Make plyr player and integrate logger overlay.
 			let plyr = new Plyr('#player', {invertTime: false});
