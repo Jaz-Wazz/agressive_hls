@@ -18,7 +18,7 @@ body
 	font-family: "Consolas";
 }
 
-.plyr
+.plyr, #player
 {
 	background-color: #202225;
 	height: 360px;
