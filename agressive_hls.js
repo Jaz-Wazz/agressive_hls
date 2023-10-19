@@ -81,6 +81,7 @@ let AgressiveHls =
 
 		constructor(text_area)
 		{
+			console.log("Buffer created.");
 			this.text_area = text_area;
 		}
 
@@ -218,17 +219,23 @@ let AgressiveHls =
 			this.buffer = config.buffer;
 		}
 
-		async load(context, config, callbacks)
+		load(context, config, callbacks)
 		{
+			console.log("Segment take: ", context.frag.sn);
 			this.buffer.take(context.frag.sn).then
 			(
 				(buf) => callbacks.onSuccess({data: buf}, {}, context),
-				(error) => { if(error.type != "abort") console.log("Segment error:", context.frag.sn, error); }
+				(error) =>
+				{
+					console.log("Segment take error:", context.frag.sn);
+					if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
+				}
 			);
 		}
 
 		abort()
 		{
+			console.log("Loader abort.");
 			// Api stub to supress errors and ignore "abort" events.
 		}
 	}
