@@ -17,6 +17,9 @@ let AgressiveHls =
 		/** @type Url */
 		url;
 
+		/** @type boolean */
+		requested = false;
+
 		constructor(buffer, segment_url)
 		{
 			// Initialize url member.
@@ -100,7 +103,7 @@ let AgressiveHls =
 			this.average_speed = this.total_speed / this.segments.size;
 
 			// Print header.
-			this.text_area.textContent = "Segment        Speed  SrAS  sSrAS\n";
+			this.text_area.textContent = "Segment        Speed  SrAS  sSrAS  Requested\n";
 
 			// Print rows.
 			this.segments.forEach((value, key) =>
@@ -118,6 +121,7 @@ let AgressiveHls =
 				+ this.format(value.speed).padStart(13)
 				+ speed_relative_average_speed.toFixed(2).toString().padStart(6)
 				+ status_by_sras.padStart(7)
+				+ value.requested.toString().padStart(7)
 				+ "\n";
 
 				if(status_by_sras == "bad") value.abort_and_retry();
@@ -183,10 +187,8 @@ let AgressiveHls =
 			let playlist = await this.playlist;
 
 			// Async wait requested segment.
+			this.segments.get(index).requested = true;
 			let result = await this.segments.get(index).promise;
-
-			// Remove requested segment from buffer.
-			this.segments.delete(index);
 
 			// Predict and add next segment.
 			let next_index = Math.max(... this.segments.keys()) + 1;
@@ -221,21 +223,56 @@ let AgressiveHls =
 
 		load(context, config, callbacks)
 		{
-			console.log("Segment take: ", context.frag.sn);
-			this.buffer.take(context.frag.sn).then
-			(
-				(buf) => callbacks.onSuccess({data: buf}, {}, context),
-				(error) =>
-				{
-					console.log("Segment take error:", context.frag.sn);
-					if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
-				}
-			);
+			if(this.buffer.segments.has(context.frag.sn) && this.buffer.segments.get(context.frag.sn).requested == true)
+			{
+				console.log("Sagment ignored:", context.frag.sn);
+			}
+			else
+			{
+				this.buffer.take(context.frag.sn).then
+				(
+					(buf) =>
+					{
+						callbacks.onSuccess({data: buf}, {}, context);
+						this.buffer.segments.delete(context.frag.sn);
+					},
+					(error) =>
+					{
+						console.log("Segment error:", context.frag.sn, error);
+						this.buffer.segments.delete(context.frag.sn);
+					}
+				);
+			}
 		}
 
 		abort()
 		{
 			console.log("Loader abort.");
+			// this.buffer.abort_all();
+			// this.buffer.segments.clear();
+
+			this.buffer.segments.forEach(async (value, key) =>
+			{
+				if(value.requested == true)
+				{
+					// Async wait playlist information.
+					let playlist = await this.buffer.playlist;
+
+					// Propagate errors from rejected promises.
+					value.promise.catch((error) => this.buffer.handle_error(error, key));
+
+					// Abort request and reject linked promise.
+					value.xhr.onabort = value.xhr.onerror;
+					value.xhr.abort();
+
+					this.buffer.segments.delete(key);
+
+					// Predict and add next segment.
+					let next_index = Math.max(... this.buffer.segments.keys()) + 1;
+					this.buffer.segments.set(next_index, new AgressiveHls.Segment(this.buffer, playlist[next_index].url));
+				}
+			});
+
 			// Api stub to supress errors and ignore "abort" events.
 		}
 	}

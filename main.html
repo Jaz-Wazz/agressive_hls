@@ -20,7 +20,24 @@
 		let buffer = new AgressiveHls.Buffer(stats_overlay);
 
 		// Make hls loader.
-		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true, autoStartLoad: false});
+		let hls = new Hls(
+		{
+			fLoader: AgressiveHls.Loader,
+			buffer: buffer,
+			enableWorker: true,
+			autoStartLoad: false,
+			nudgeMaxRetry: 0,
+			fragLoadPolicy:
+			{
+				default:
+				{
+					maxTimeToFirstByteMs: 120000,
+					maxLoadTimeMs: 120000,
+					timeoutRetry: null,
+					errorRetry: null
+				},
+			},
+		});
 		buffer.handle_events(hls);
 
 		// Check browser support plyr.
@@ -48,7 +65,7 @@
 		// Load sourses.
 		window.onload = () =>
 		{
-			hls.loadSource('http://ia801502.s3dns.us.archive.org/e664bc09/index-muted-T1IWW6BKPV.m3u8');
+			hls.loadSource('http://ia600509.s3dns.us.archive.org/moddychat_2023.07.05_12.05_test/index-dvr.m3u8');
 			hls.attachMedia(player);
 		};
 	</script>
