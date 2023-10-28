@@ -198,6 +198,11 @@ let AgressiveHls =
 			return result.target.response;
 		}
 
+		remove_segment(index)
+		{
+			this.segments.delete(index);
+		}
+
 		remove_requested_segments()
 		{
 			this.segments.forEach(async (value, key) =>
@@ -214,7 +219,7 @@ let AgressiveHls =
 					value.xhr.onabort = value.xhr.onerror;
 					value.xhr.abort();
 
-					this.segments.delete(key);
+					this.remove_segment(key);
 
 					// Predict and add next segment.
 					let next_index = Math.max(... this.segments.keys()) + 1;
@@ -259,12 +264,12 @@ let AgressiveHls =
 					(buf) =>
 					{
 						callbacks.onSuccess({data: buf}, {}, context);
-						this.buffer.segments.delete(context.frag.sn);
+						this.buffer.remove_segment(context.frag.sn);
 					},
 					(error) =>
 					{
 						if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
-						this.buffer.segments.delete(context.frag.sn);
+						this.buffer.remove_segment(context.frag.sn);
 					}
 				);
 			}
