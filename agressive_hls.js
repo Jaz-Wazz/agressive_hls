@@ -263,7 +263,7 @@ let AgressiveHls =
 					},
 					(error) =>
 					{
-						console.log("Segment error:", context.frag.sn, error);
+						if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
 						this.buffer.segments.delete(context.frag.sn);
 					}
 				);
