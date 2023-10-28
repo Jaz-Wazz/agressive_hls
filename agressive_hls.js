@@ -248,8 +248,6 @@ let AgressiveHls =
 		abort()
 		{
 			console.log("Loader abort.");
-			// this.buffer.abort_all();
-			// this.buffer.segments.clear();
 
 			this.buffer.segments.forEach(async (value, key) =>
 			{
@@ -272,8 +270,6 @@ let AgressiveHls =
 					this.buffer.segments.set(next_index, new AgressiveHls.Segment(this.buffer, playlist[next_index].url));
 				}
 			});
-
-			// Api stub to supress errors and ignore "abort" events.
 		}
 	}
 };
