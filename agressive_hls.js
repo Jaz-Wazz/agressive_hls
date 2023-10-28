@@ -121,7 +121,7 @@ let AgressiveHls =
 				+ this.format(value.speed).padStart(13)
 				+ speed_relative_average_speed.toFixed(2).toString().padStart(6)
 				+ status_by_sras.padStart(7)
-				+ value.requested.toString().padStart(7)
+				+ value.requested.toString().padStart(11)
 				+ "\n";
 
 				if(status_by_sras == "bad") value.abort_and_retry();
