@@ -251,21 +251,18 @@ let AgressiveHls =
 			this.buffer = config.buffer;
 		}
 
-		load(context, config, callbacks)
+		async load(context, config, callbacks)
 		{
-			this.buffer.take(context.frag.sn).then
-			(
-				(buf) =>
-				{
-					callbacks.onSuccess({data: buf}, {}, context);
-					this.buffer.remove_segment(context.frag.sn);
-				},
-				(error) =>
-				{
-					if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
-					this.buffer.remove_segment(context.frag.sn);
-				}
-			);
+			try
+			{
+				let segment = await this.buffer.take(context.frag.sn);
+				callbacks.onSuccess({data: segment}, {}, context);
+			}
+			catch(error)
+			{
+				if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
+			}
+			this.buffer.remove_segment(context.frag.sn);
 		}
 
 		abort()
