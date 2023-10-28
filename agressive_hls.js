@@ -198,6 +198,31 @@ let AgressiveHls =
 			return result.target.response;
 		}
 
+		remove_requested_segments()
+		{
+			this.segments.forEach(async (value, key) =>
+			{
+				if(value.requested == true)
+				{
+					// Async wait playlist information.
+					let playlist = await this.playlist;
+
+					// Propagate errors from rejected promises.
+					value.promise.catch((error) => this.handle_error(error, key));
+
+					// Abort request and reject linked promise.
+					value.xhr.onabort = value.xhr.onerror;
+					value.xhr.abort();
+
+					this.segments.delete(key);
+
+					// Predict and add next segment.
+					let next_index = Math.max(... this.segments.keys()) + 1;
+					this.segments.set(next_index, new AgressiveHls.Segment(this, playlist[next_index].url));
+				}
+			});
+		}
+
 		handle_events(hls)
 		{
 			this.playlist = new Promise((resolve, reject) =>
@@ -248,28 +273,7 @@ let AgressiveHls =
 		abort()
 		{
 			console.log("Loader abort.");
-
-			this.buffer.segments.forEach(async (value, key) =>
-			{
-				if(value.requested == true)
-				{
-					// Async wait playlist information.
-					let playlist = await this.buffer.playlist;
-
-					// Propagate errors from rejected promises.
-					value.promise.catch((error) => this.buffer.handle_error(error, key));
-
-					// Abort request and reject linked promise.
-					value.xhr.onabort = value.xhr.onerror;
-					value.xhr.abort();
-
-					this.buffer.segments.delete(key);
-
-					// Predict and add next segment.
-					let next_index = Math.max(... this.buffer.segments.keys()) + 1;
-					this.buffer.segments.set(next_index, new AgressiveHls.Segment(this.buffer, playlist[next_index].url));
-				}
-			});
+			this.buffer.remove_requested_segments();
 		}
 	}
 };
