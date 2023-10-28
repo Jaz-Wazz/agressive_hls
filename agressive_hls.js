@@ -157,34 +157,44 @@ let AgressiveHls =
 			});
 		}
 
-		async move(index)
-		{
-			// Async wait playlist information.
-			let playlist = await this.playlist;
-
-			// Abort all xhr requests, because destruct xhr object not aborted request.
-			this.abort_all();
-
-			// Clear buffer.
-			this.segments.clear();
-
-			// Fill buffer.
-			for(let i = index; this.segments.size < 6; i++)
-			{
-				this.segments.set(i, new AgressiveHls.Segment(this, playlist[i].url));
-			}
-		}
-
 		async take(index)
 		{
-			// Log requested segment status.
-			console.log(this.segments.has(index) ? "Segment hit:" : "Segment miss:", index);
-
-			// Move buffer on miss.
-			if(!this.segments.has(index)) await this.move(index);
-
 			// Async wait playlist information.
 			let playlist = await this.playlist;
+
+			// Long higher jump. (Full rebuffer)
+			// [10] [11] [12] [13] [14] [15] -> !20 -> [20] [21] [22] [23] [24] [25] /-> []
+
+			// Long lower jump. (Full rebuffer)
+			// [10] [11] [12] [13] [14] [15] -> !3  -> [ 3] [ 4] [ 5] [ 6] [ 7] [ 8] /-> []
+
+			// Short higher jump. (Save: [13] [14] [15], Add: [16] [17] [18])
+			// [10] [11] [12] [13] [14] [15] -> !13 -> [13] [14] [15] [16] [17] [18] /-> [13, 14, 15]
+
+			// Short lower jump. (Save: [10] [11] [12], Add: [ 7] [ 8] [ 9])
+			// [10] [11] [12] [13] [14] [15] -> !7  -> [ 7] [ 8] [ 9] [10] [11] [12] /-> [10, 11, 12]
+
+			// Remove out of window segments.
+			this.segments.forEach((value, key) =>
+			{
+				// 0 1 2 3 4 5 6
+				if(key < index || key >= index + 6)
+				{
+					value.promise.catch((error) => this.handle_error(error, key));
+					value.xhr.onabort = value.xhr.onerror;
+					value.xhr.abort();
+					this.segments.delete(key);
+				}
+			});
+
+			// Add missing window segments.
+			for(let i = index; i < index + 6; i++)
+			{
+				if(this.segments.has(i) == false)
+				{
+					this.segments.set(i, new AgressiveHls.Segment(this, playlist[i].url));
+				}
+			}
 
 			// Async wait requested segment.
 			this.segments.get(index).requested = true;
