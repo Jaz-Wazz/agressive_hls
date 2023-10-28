@@ -20,24 +20,7 @@
 		let buffer = new AgressiveHls.Buffer(stats_overlay);
 
 		// Make hls loader.
-		let hls = new Hls(
-		{
-			fLoader: AgressiveHls.Loader,
-			buffer: buffer,
-			enableWorker: true,
-			autoStartLoad: false,
-			nudgeMaxRetry: 0,
-			fragLoadPolicy:
-			{
-				default:
-				{
-					maxTimeToFirstByteMs: 120000,
-					maxLoadTimeMs: 120000,
-					timeoutRetry: null,
-					errorRetry: null
-				},
-			},
-		});
+		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true, autoStartLoad: false});
 		buffer.handle_events(hls);
 
 		// Check browser support plyr.
