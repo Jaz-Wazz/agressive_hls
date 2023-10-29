@@ -37,6 +37,11 @@
 			stats_button.onclick = () => stats_overlay.style.display = stats_overlay.style.display == "none" ? "block" : "none";
 			plyr.elements.volume.after(stats_button);
 		}
+		else
+		{
+			stats_overlay.style.display = "block";
+			document.body.append(stats_overlay);
+		}
 
 		// Handle play event for start deferred load.
 		document.getElementById("player").onplay = () =>
