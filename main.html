@@ -36,6 +36,18 @@
 			stats_button.innerHTML = `<img src="stats.svg"></img>`;
 			stats_button.onclick = () => stats_overlay.style.display = stats_overlay.style.display == "none" ? "block" : "none";
 			plyr.elements.volume.after(stats_button);
+
+			// Supress default volume keybinds.
+			plyr.elements.volume.onkeydown = event => event.preventDefault();
+
+			// Make global control keybinds.
+			document.body.onkeydown = (event) =>
+			{
+				if(event.key == "ArrowLeft")	plyr.rewind();
+				if(event.key == "ArrowRight")	plyr.forward();
+				if(event.key == "ArrowUp")		plyr.volume += 0.1;
+				if(event.key == "ArrowDown")	plyr.volume -= 0.1;
+			};
 		}
 		else
 		{
