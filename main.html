@@ -37,8 +37,9 @@
 			stats_button.onclick = () => stats_overlay.style.display = stats_overlay.style.display == "none" ? "block" : "none";
 			plyr.elements.volume.after(stats_button);
 
-			// Supress default volume keybinds.
+			// Supress default keybinds.
 			plyr.elements.volume.onkeydown = event => event.preventDefault();
+			plyr.elements.buttons.play[1].onkeydown = event => event.preventDefault();
 
 			// Make global control keybinds.
 			document.body.onkeydown = (event) =>
@@ -47,6 +48,7 @@
 				if(event.key == "ArrowRight")	plyr.forward();
 				if(event.key == "ArrowUp")		plyr.volume += 0.1;
 				if(event.key == "ArrowDown")	plyr.volume -= 0.1;
+				if(event.key == " ")			plyr.paused ? plyr.play() : plyr.pause();
 			};
 		}
 		else
