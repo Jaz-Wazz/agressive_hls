@@ -270,7 +270,15 @@ let AgressiveHls =
 			}
 			catch(error)
 			{
-				if(error.type != "abort") console.log("Segment error:", context.frag.sn, error);
+				if(error.type == "abort")
+				{
+					callbacks.onAbort({}, context, {});
+				}
+				else
+				{
+					console.log("Segment error:", context.frag.sn, error);
+					callbacks.onError({}, context, {}, {});
+				}
 			}
 			this.buffer.remove_segment(context.frag.sn);
 		}
