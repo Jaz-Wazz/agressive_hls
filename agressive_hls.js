@@ -59,7 +59,29 @@ let AgressiveHls =
 			this.progress = event.loaded / event.total;
 		}
 
-		abort_and_retry()
+		on_error(error)
+		{
+			if(error.type == "abort")
+			{
+				console.log("Segment abort:", this.url.split('/').pop());
+			}
+			else
+			{
+				console.log("Segment error:", this.url.split('/').pop(), error);
+			}
+		}
+
+		abort()
+		{
+			// Propagate errors from rejected promises.
+			this.promise.catch(error => this.on_error(error));
+
+			// Abort request and reject linked promise.
+			this.xhr.onabort = this.xhr.onerror;
+			this.xhr.abort();
+		}
+
+		retry()
 		{
 			this.xhr.abort();
 			this.xhr.open("GET", this.url);
@@ -130,7 +152,7 @@ let AgressiveHls =
 				+ (Math.round(value.progress * 100).toString() + "%").padStart(10)
 				+ "\n";
 
-				if(status_by_sras == "bad") value.abort_and_retry();
+				if(status_by_sras == "bad") value.retry();
 			});
 
 			// Print other statistics.
@@ -138,29 +160,9 @@ let AgressiveHls =
 			this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
 		}
 
-		handle_error(error, index)
-		{
-			if(error.type == "abort")
-			{
-				console.log("Segment abort:", index);
-			}
-			else
-			{
-				console.log("Segment error:", index, error);
-			}
-		}
-
 		abort_all()
 		{
-			this.segments.forEach((value, key) =>
-			{
-				// Propagate errors from rejected promises.
-				value.promise.catch((error) => this.handle_error(error, key));
-
-				// Abort request and reject linked promise.
-				value.xhr.onabort = value.xhr.onerror;
-				value.xhr.abort();
-			});
+			this.segments.forEach(value => value.abort());
 		}
 
 		async take(index)
@@ -185,9 +187,7 @@ let AgressiveHls =
 			{
 				if(key < index || key >= index + 6)
 				{
-					value.promise.catch((error) => this.handle_error(error, key));
-					value.xhr.onabort = value.xhr.onerror;
-					value.xhr.abort();
+					value.abort();
 					this.segments.delete(key);
 				}
 			});
@@ -228,13 +228,8 @@ let AgressiveHls =
 					// Async wait playlist information.
 					let playlist = await this.playlist;
 
-					// Propagate errors from rejected promises.
-					value.promise.catch((error) => this.handle_error(error, key));
-
-					// Abort request and reject linked promise.
-					value.xhr.onabort = value.xhr.onerror;
-					value.xhr.abort();
-
+					// Abort and remove.
+					value.abort();
 					this.remove_segment(key);
 
 					// Predict and add next segment.
