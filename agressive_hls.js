@@ -194,7 +194,7 @@ let AgressiveHls =
 			});
 
 			// Add missing window segments.
-			for(let i = index; i < index + 6; i++)
+			for(let i = index; i < index + 6 && i < playlist.length; i++)
 			{
 				if(this.segments.has(i) == false)
 				{
@@ -208,7 +208,7 @@ let AgressiveHls =
 
 			// Predict and add next segment.
 			let next_index = Math.max(... this.segments.keys()) + 1;
-			this.segments.set(next_index, new AgressiveHls.Segment(this, playlist[next_index].url));
+			if(next_index < playlist.length) this.segments.set(next_index, new AgressiveHls.Segment(this, playlist[next_index].url));
 
 			// Return requested segment data.
 			return result.target.response;
@@ -217,6 +217,7 @@ let AgressiveHls =
 		remove_segment(index)
 		{
 			this.segments.delete(index);
+			this.on_progress();
 		}
 
 		remove_requested_segments()
@@ -239,7 +240,7 @@ let AgressiveHls =
 
 					// Predict and add next segment.
 					let next_index = Math.max(... this.segments.keys()) + 1;
-					this.segments.set(next_index, new AgressiveHls.Segment(this, playlist[next_index].url));
+					if(next_index < playlist.length) this.segments.set(next_index, new AgressiveHls.Segment(this, playlist[next_index].url));
 				}
 			});
 		}
