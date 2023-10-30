@@ -16,8 +16,13 @@
 		stats_overlay.spellcheck = "false";
 		stats_overlay.style.display = "none";
 
+		// Make progress overlay.
+		let progress_overlay = document.createElement("div");
+		progress_overlay.innerText = "100%";
+		progress_overlay.className = "progress_overlay";
+
 		// Make hls buffer with output to logger overlay.
-		let buffer = new AgressiveHls.Buffer(stats_overlay);
+		let buffer = new AgressiveHls.Buffer(stats_overlay, progress_overlay);
 
 		// Make hls loader.
 		let hls = new Hls({fLoader: AgressiveHls.Loader, buffer: buffer, enableWorker: true, autoStartLoad: false});
@@ -26,9 +31,10 @@
 		// Check browser support plyr.
 		if(typeof Plyr != "undefined")
 		{
-			// Make plyr player and integrate logger overlay.
+			// Make plyr player and integrate overlays.
 			let plyr = new Plyr('#player', {invertTime: false});
 			plyr.elements.container.append(stats_overlay);
+			plyr.elements.container.append(progress_overlay);
 
 			// Add custom plyr stats button.
 			let stats_button = document.createElement("button");

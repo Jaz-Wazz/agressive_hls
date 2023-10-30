@@ -45,3 +45,16 @@ textarea
 	height: 18px;
 	display: block;
 }
+
+.progress_overlay
+{
+	width: 60px;
+	height: 40px;
+	background-color: rgba(191, 84, 84, 0.5);
+	color: rgb(227, 227, 227);
+	position: absolute;
+	top: calc(50% - 40px / 2);
+	display: grid;
+	justify-content: center;
+	align-content: center;
+}

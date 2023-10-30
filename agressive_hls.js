@@ -103,16 +103,20 @@ let AgressiveHls =
 		/** @type HTMLTextAreaElement */
 		text_area;
 
+		/** @type HTMLTextAreaElement */
+		progress_overlay;
+
 		/** @type number */
 		average_speed = 0;
 
 		/** @type number */
 		total_speed = 0;
 
-		constructor(text_area)
+		constructor(text_area, progress_overlay)
 		{
 			console.log("Buffer created.");
 			this.text_area = text_area;
+			this.progress_overlay = progress_overlay;
 		}
 
 		format(size)
@@ -153,6 +157,7 @@ let AgressiveHls =
 				+ "\n";
 
 				if(status_by_sras == "bad") value.retry();
+				this.progress_overlay.style.display = value.requested ? "grid" : "none";
 			});
 
 			// Print other statistics.
