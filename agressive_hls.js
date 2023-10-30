@@ -12,6 +12,9 @@ let AgressiveHls =
 		speed = 0;
 
 		/** @type number */
+		progress = 0;
+
+		/** @type number */
 		start_point = new Date().getTime();
 
 		/** @type Url */
@@ -53,6 +56,7 @@ let AgressiveHls =
 			let elapsed_time = new Date().getTime() - this.start_point;
 			let multiplier = 1000 / elapsed_time;
 			this.speed = event.loaded * multiplier;
+			this.progress = event.loaded / event.total;
 		}
 
 		abort_and_retry()
@@ -60,6 +64,7 @@ let AgressiveHls =
 			this.xhr.abort();
 			this.xhr.open("GET", this.url);
 			this.speed = 0;
+			this.progress = 0;
 			this.start_point = new Date().getTime();
 			this.xhr.send();
 		}
@@ -103,7 +108,7 @@ let AgressiveHls =
 			this.average_speed = this.total_speed / this.segments.size;
 
 			// Print header.
-			this.text_area.textContent = "Segment        Speed  SrAS  sSrAS  Requested\n";
+			this.text_area.textContent = "Segment        Speed  SrAS  sSrAS  Requested  Progress\n";
 
 			// Print rows.
 			this.segments.forEach((value, key) =>
@@ -122,6 +127,7 @@ let AgressiveHls =
 				+ speed_relative_average_speed.toFixed(2).toString().padStart(6)
 				+ status_by_sras.padStart(7)
 				+ value.requested.toString().padStart(11)
+				+ (Math.round(value.progress * 100).toString() + "%").padStart(10)
 				+ "\n";
 
 				if(status_by_sras == "bad") value.abort_and_retry();
