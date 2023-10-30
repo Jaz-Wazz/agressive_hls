@@ -183,7 +183,6 @@ let AgressiveHls =
 			// Remove out of window segments.
 			this.segments.forEach((value, key) =>
 			{
-				// 0 1 2 3 4 5 6
 				if(key < index || key >= index + 6)
 				{
 					value.promise.catch((error) => this.handle_error(error, key));
