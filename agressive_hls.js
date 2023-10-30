@@ -162,7 +162,7 @@ let AgressiveHls =
 
 		abort_all()
 		{
-			this.segments.forEach(value => value.abort());
+			this.segments.forEach(segment => segment.abort());
 		}
 
 		async take(index)
@@ -183,12 +183,12 @@ let AgressiveHls =
 			// [10] [11] [12] [13] [14] [15] -> !7  -> [ 7] [ 8] [ 9] [10] [11] [12] /-> [10, 11, 12]
 
 			// Remove out of window segments.
-			this.segments.forEach((value, key) =>
+			this.segments.forEach((segment, segment_index) =>
 			{
-				if(key < index || key >= index + 6)
+				if(segment_index < index || segment_index >= index + 6)
 				{
-					value.abort();
-					this.segments.delete(key);
+					segment.abort();
+					this.segments.delete(segment_index);
 				}
 			});
 
@@ -221,16 +221,16 @@ let AgressiveHls =
 
 		remove_requested_segments()
 		{
-			this.segments.forEach(async (value, key) =>
+			this.segments.forEach(async (segment, segment_index) =>
 			{
-				if(value.requested == true)
+				if(segment.requested == true)
 				{
 					// Async wait playlist information.
 					let playlist = await this.playlist;
 
 					// Abort and remove.
-					value.abort();
-					this.remove_segment(key);
+					segment.abort();
+					this.remove_segment(segment_index);
 
 					// Predict and add next segment.
 					let next_index = Math.max(... this.segments.keys()) + 1;
