@@ -1,0 +1,11 @@
+{
+	"name": "agressive_hls",
+	"version": "0.1.0",
+	"description": "Agressive hls loader library.",
+	"scripts":
+	{
+		"build": "exit 1"
+	},
+	"author": "Jaz-Wazz",
+	"license": "MIT"
+}
