@@ -4,7 +4,7 @@
 	"description": "Agressive hls loader library.",
 	"scripts":
 	{
-		"build": "exit 1"
+		"build": "webpack"
 	},
 	"author": "Jaz-Wazz",
 	"license": "MIT",
