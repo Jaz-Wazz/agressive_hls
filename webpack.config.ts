@@ -24,7 +24,8 @@ const config: webpack.Configuration =
 		client:
 		{
 			logging: "warn",
-			reconnect: false
+			reconnect: false,
+			overlay: false
 		}
 	}
 };
