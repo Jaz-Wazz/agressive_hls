@@ -4,7 +4,8 @@
 	"description": "Agressive hls loader library.",
 	"scripts":
 	{
-		"build": "webpack"
+		"build": "webpack",
+		"server": "webpack serve"
 	},
 	"author": "Jaz-Wazz",
 	"license": "MIT",
@@ -16,7 +17,8 @@
 		"ts-node": "^10.9.1",
 		"typescript": "^5.2.2",
 		"webpack": "^5.89.0",
-		"webpack-cli": "^5.1.4"
+		"webpack-cli": "^5.1.4",
+		"webpack-dev-server": "^4.15.1"
 	},
 	"dependencies":
 	{

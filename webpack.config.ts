@@ -1,4 +1,5 @@
 import webpack from "webpack";
+import _ from "webpack-dev-server";
 
 const config: webpack.Configuration =
 {
@@ -14,6 +15,17 @@ const config: webpack.Configuration =
 				exclude: /node_modules/
 			}
 		]
+	},
+	devServer:
+	{
+		static: "./dist",
+		liveReload: false,
+		hot: false,
+		client:
+		{
+			logging: "warn",
+			reconnect: false
+		}
 	}
 };
 
