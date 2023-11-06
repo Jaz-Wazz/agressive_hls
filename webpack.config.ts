@@ -1,4 +1,6 @@
-module.exports =
+import webpack from "webpack";
+
+const config: webpack.Configuration =
 {
 	mode: "development",
 	entry: "./src/main.ts",
@@ -14,3 +16,5 @@ module.exports =
 		]
 	}
 };
+
+export default config;
