@@ -1,4 +1,6 @@
 import Hls from "hls.js";
+import Plyr from "plyr";
+import "plyr/dist/plyr.css";
 
 window.onload = () =>
 {
@@ -15,5 +17,10 @@ window.onload = () =>
 			hls.startLoad();
 			if(player != null) player.onplay = () => {};
 		};
+
+		if(Plyr.supported())
+		{
+			let plyr = new Plyr(player, {invertTime: false});
+		}
 	}
 };
