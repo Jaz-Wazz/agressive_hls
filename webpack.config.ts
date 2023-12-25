@@ -1,12 +1,18 @@
 import webpack from "webpack";
 import _ from "webpack-dev-server";
 import CopyPlugin from "copy-webpack-plugin";
+import path from "path";
 
 const config: webpack.Configuration =
 {
 	mode: "development",
 	entry: "./src/main.ts",
 	devtool: 'source-map',
+	output:
+	{
+		path: path.resolve(__dirname, "./build"),
+		clean: true
+	},
 	module:
 	{
 		rules:
@@ -20,7 +26,7 @@ const config: webpack.Configuration =
 	},
 	devServer:
 	{
-		static: "./dist",
+		static: "./build",
 		liveReload: false,
 		hot: false,
 		client:
