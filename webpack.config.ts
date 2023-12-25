@@ -1,5 +1,6 @@
 import webpack from "webpack";
 import _ from "webpack-dev-server";
+import CopyPlugin from "copy-webpack-plugin";
 
 const config: webpack.Configuration =
 {
@@ -31,8 +32,16 @@ const config: webpack.Configuration =
 			logging: "warn",
 			reconnect: false,
 			overlay: false
+		},
+		devMiddleware:
+		{
+			writeToDisk: true
 		}
-	}
+	},
+	plugins:
+	[
+		new CopyPlugin({patterns: ["./src/main.html", "./src/main.css"]})
+	]
 };
 
 export default config;
