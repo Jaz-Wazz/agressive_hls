@@ -1,6 +1,5 @@
 import Hls from "hls.js";
 import Plyr from "plyr";
-import "plyr/dist/plyr.css";
 
 window.onload = () =>
 {

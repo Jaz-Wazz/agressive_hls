@@ -15,11 +15,7 @@ const config: webpack.Configuration =
 				test: /\.tsx?$/,
 				use: "ts-loader",
 				exclude: /node_modules/
-			},
-			{
-				test: /\.css$/,
-				use: ["style-loader", "css-loader"]
-			},
+			}
 		]
 	},
 	devServer:
@@ -40,7 +36,7 @@ const config: webpack.Configuration =
 	},
 	plugins:
 	[
-		new CopyPlugin({patterns: ["./src/main.html", "./src/main.css"]})
+		new CopyPlugin({patterns: ["./src/main.html", "./src/main.css", "./node_modules/plyr/dist/plyr.css"]})
 	]
 };
 
