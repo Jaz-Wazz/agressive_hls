@@ -5,6 +5,7 @@ const config: webpack.Configuration =
 {
 	mode: "development",
 	entry: "./src/main.ts",
+	devtool: 'source-map',
 	module:
 	{
 		rules:
