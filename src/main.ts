@@ -1,25 +1,51 @@
 import Hls from "hls.js";
-import Plyr from "plyr";
+import { Loaderx, buffer, sas } from "./agressive_hls";
 
 window.onload = () =>
 {
 	let player = document.getElementById("player");
 
+	// if(player instanceof HTMLVideoElement)
+	// {
+	// 	let hls = new Hls({fLoader: AgressiveHls.Loaderx, enableWorker: true, autoStartLoad: false});
+	// 	hls.loadSource('http://ia800509.s3dns.us.archive.org/moddychat_2023.07.05_12.05_test/index-dvr.m3u8');
+	// 	hls.attachMedia(player);
+
+	// 	player.onplay = () =>
+	// 	{
+	// 		hls.startLoad();
+	// 		if(player != null) player.onplay = () => {};
+	// 	};
+	// }
+
 	if(player instanceof HTMLVideoElement)
 	{
-		let hls = new Hls({enableWorker: true, autoStartLoad: false});
+		sas();
+
+		// Make hls loader.
+		let hls = new Hls({loader: Loaderx, enableWorker: true});
 		hls.loadSource('http://ia800509.s3dns.us.archive.org/moddychat_2023.07.05_12.05_test/index-dvr.m3u8');
 		hls.attachMedia(player);
+		buffer.handle_events(hls);
 
-		player.onplay = () =>
-		{
-			hls.startLoad();
-			if(player != null) player.onplay = () => {};
-		};
+		// Handle play event for start deferred load.
+		// player.onplay = () =>
+		// {
+		// 	hls.startLoad();
+		// 	if(player != null)
+		// 	{
+		// 		player.onplay = () => {};
+		// 	}
+		// };
 
-		if(Plyr.supported())
-		{
-			let plyr = new Plyr(player, {invertTime: false});
-		}
+		// Load sourses.
+		// window.onload = () =>
+		// {
+
+		// 	if(player instanceof HTMLVideoElement)
+		// 	{
+
+		// 	}
+		// };
 	}
 };
