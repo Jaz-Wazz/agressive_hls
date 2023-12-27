@@ -251,21 +251,21 @@ class Buffer
 	}
 };
 
-let text_area = document.createElement("textarea");
-let buffer = new Buffer(text_area);
-
 class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderContext>> Hls.DefaultConfig.loader)
 {
-	constructor(config: HlsConfig)
+	private buffer: Buffer;
+
+	public constructor(config: HlsConfig, buffer: Buffer)
 	{
 		super(config);
+		this.buffer = buffer;
 	}
 
-	async load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
+	public async load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 	{
 		try
 		{
-			let segment = await buffer.take(context.frag.sn);
+			let segment = await this.buffer.take(context.frag.sn);
 			callbacks.onSuccess({url: context.url, data: segment}, this.stats, context, null);
 		}
 		catch(error: any)
@@ -280,18 +280,31 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 				callbacks.onError({code: 0, text: "error_text"}, context, null, this.stats);
 			}
 		}
-		buffer.remove_segment(context.frag.sn);
+		this.buffer.remove_segment(context.frag.sn);
 	}
 
-	abort(): void
+	public abort(): void
 	{
 		console.log("Loader abort.");
-		buffer.remove_requested_segments();
+		this.buffer.remove_requested_segments();
 	}
+}
+
+function make_custom_loader(buffer: Buffer): new (confg: HlsConfig) => Loader<FragmentLoaderContext>
+{
+	class CustomLoaderWrapper extends CustomLoader
+	{
+		constructor(config: HlsConfig)
+		{
+			super(config, buffer);
+		}
+	};
+	return CustomLoaderWrapper;
 }
 
 window.onload = () =>
 {
+	let text_area = document.createElement("textarea");
 	text_area.spellcheck = false;
 	document.body.append(text_area);
 
@@ -299,7 +312,8 @@ window.onload = () =>
 
 	if(player instanceof HTMLVideoElement)
 	{
-		let hls = new Hls({fLoader: CustomLoader, enableWorker: true});
+		let buffer	= new Buffer(text_area);
+		let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true});
 		buffer.handle_events(hls);
 
 		hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
