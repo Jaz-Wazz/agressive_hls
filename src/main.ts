@@ -1,4 +1,4 @@
-import Hls, { FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
+import Hls, { FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
 
 class Segment
 {
@@ -299,7 +299,7 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 	}
 }
 
-function make_custom_loader(buffer: Buffer): new (confg: HlsConfig) => Loader<FragmentLoaderContext>
+function make_custom_loader(buffer: Buffer): FragmentLoaderConstructor
 {
 	class CustomLoaderWrapper extends CustomLoader
 	{
