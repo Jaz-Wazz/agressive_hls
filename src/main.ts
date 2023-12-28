@@ -3,7 +3,7 @@ import Hls, { FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loade
 class Segment
 {
 	public xhr: XMLHttpRequest = new XMLHttpRequest();
-	public promise: Promise<any>;
+	public promise: Promise<ArrayBuffer>;
 	public speed: number = 0;
 	public progress: number = 0;
 	public start_point: number = new Date().getTime();
@@ -27,10 +27,10 @@ class Segment
 			this.xhr.responseType = "arraybuffer";
 
 			// Connect callbacks.
-			this.xhr.onload = (event: ProgressEvent<EventTarget>) =>
+			this.xhr.onload = () =>
 			{
 				this.loaded = true;
-				resolve(event);
+				resolve(this.xhr.response);
 			};
 
 			this.xhr.onerror = reject;
@@ -194,14 +194,14 @@ class Buffer
 
 		// Async wait requested segment.
 		this.segments.get(index).requested = true;
-		let result = await this.segments.get(index).promise;
+		let buffer = await this.segments.get(index).promise;
 
 		// Predict and add next segment.
 		let next_index = Math.max(... this.segments.keys()) + 1;
 		if(next_index < playlist.length) this.segments.set(next_index, new Segment(this, playlist[next_index].url));
 
 		// Return requested segment data.
-		return result.target.response;
+		return buffer;
 	}
 
 	public remove_segment(index: any): void
