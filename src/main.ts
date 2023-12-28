@@ -90,33 +90,26 @@ class Segment
 
 class Buffer
 {
+	public playlist: any;
+	public text_area: HTMLTextAreaElement;
+	public average_speed: number = 0;
+	public total_speed: number = 0;
+
 	/** @type Map<number, Segment> */
 	segments = new Map();
 
-	/** @type Promise */
-	playlist: any;
-
-	/** @type HTMLTextAreaElement */
-	text_area;
-
-	/** @type number */
-	average_speed = 0;
-
-	/** @type number */
-	total_speed = 0;
-
-	constructor(text_area: any)
+	public constructor(text_area: HTMLTextAreaElement)
 	{
 		console.log("Buffer created.");
 		this.text_area = text_area;
 	}
 
-	format(size: any)
+	public format(size: number): string
 	{
 		return (size / 131072).toFixed(2) + " mbit/s";
 	}
 
-	on_progress()
+	public on_progress(): void
 	{
 		// Update total speed.
 		this.total_speed = 0;
@@ -158,12 +151,12 @@ class Buffer
 		this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
 	}
 
-	abort_all()
+	public abort_all(): void
 	{
 		this.segments.forEach(segment => segment.abort());
 	}
 
-	async take(index: any)
+	public async take(index: any): Promise<ArrayBuffer>
 	{
 		// Async wait playlist information.
 		let playlist = await this.playlist;
@@ -211,13 +204,13 @@ class Buffer
 		return result.target.response;
 	}
 
-	remove_segment(index: any)
+	public remove_segment(index: any): void
 	{
 		this.segments.delete(index);
 		this.on_progress();
 	}
 
-	remove_requested_segments()
+	public remove_requested_segments(): void
 	{
 		this.segments.forEach(async (segment, segment_index) =>
 		{
@@ -237,11 +230,11 @@ class Buffer
 		});
 	}
 
-	handle_events(hls: any)
+	public handle_events(hls: Hls): void
 	{
 		this.playlist = new Promise((resolve, reject) =>
 		{
-			hls.on(Hls.Events.LEVEL_LOADED, (event: any, data: any) =>
+			hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
 			{
 				resolve(data.details.fragments);
 			});
