@@ -94,9 +94,7 @@ class Buffer
 	public text_area: HTMLTextAreaElement;
 	public average_speed: number = 0;
 	public total_speed: number = 0;
-
-	/** @type Map<number, Segment> */
-	segments = new Map();
+	public segments: Map<number, Segment> = new Map();
 
 	public constructor(text_area: HTMLTextAreaElement)
 	{
@@ -192,16 +190,23 @@ class Buffer
 			}
 		}
 
-		// Async wait requested segment.
-		this.segments.get(index).requested = true;
-		let buffer = await this.segments.get(index).promise;
+		let segment = this.segments.get(index);
+		if(segment != undefined)
+		{
+			segment.requested = true;
+			let buffer = await segment.promise;
 
-		// Predict and add next segment.
-		let next_index = Math.max(... this.segments.keys()) + 1;
-		if(next_index < playlist.length) this.segments.set(next_index, new Segment(this, playlist[next_index].url));
+			// Predict and add next segment.
+			let next_index = Math.max(... this.segments.keys()) + 1;
+			if(next_index < playlist.length) this.segments.set(next_index, new Segment(this, playlist[next_index].url));
 
-		// Return requested segment data.
-		return buffer;
+			// Return requested segment data.
+			return buffer;
+		}
+		else
+		{
+			throw new Error(`Undefined access to ${index} segment.`);
+		}
 	}
 
 	public remove_segment(index: any): void
