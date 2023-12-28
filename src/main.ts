@@ -23,6 +23,8 @@ class Segment
 	/** @type boolean */
 	requested = false;
 
+	loaded: boolean = false;
+
 	constructor(buffer: any, segment_url: any)
 	{
 		// Initialize url member.
@@ -36,7 +38,12 @@ class Segment
 			this.xhr.responseType = "arraybuffer";
 
 			// Connect callbacks.
-			this.xhr.onload = resolve;
+			this.xhr.onload = (event: ProgressEvent<EventTarget>) =>
+			{
+				this.loaded = true;
+				resolve(event);
+			};
+
 			this.xhr.onerror = reject;
 			this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
 
@@ -130,7 +137,7 @@ class Buffer
 		this.average_speed = this.total_speed / this.segments.size;
 
 		// Print header.
-		this.text_area.textContent = "Segment        Speed  SrAS  sSrAS  Requested  Progress\n";
+		this.text_area.textContent = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
 
 		// Print rows.
 		this.segments.forEach((value, key) =>
@@ -149,10 +156,12 @@ class Buffer
 			+ speed_relative_average_speed.toFixed(2).toString().padStart(6)
 			+ status_by_sras.padStart(7)
 			+ value.requested.toString().padStart(11)
+			+ value.loaded.toString().padStart(8)
 			+ (Math.round(value.progress * 100).toString() + "%").padStart(10)
 			+ "\n";
 
-			if(status_by_sras == "bad") value.retry();
+			// Not call this for downloaded segements.
+			if(status_by_sras == "bad" && value.loaded == false) value.retry();
 		});
 
 		// Print other statistics.
