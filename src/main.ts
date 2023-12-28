@@ -42,15 +42,7 @@ class Segment
 			this.xhr.onload = (event: ProgressEvent<EventTarget>) =>
 			{
 				this.loaded = true;
-				if(event.target instanceof XMLHttpRequest)
-				{
-					console.log("Segment.xhr.onload:", this.url.split('/').pop(), event, event.target, event.target.readyState, event.target.response);
-					resolve(event);
-				}
-				else
-				{
-					console.error("event.target NOT instanceof XMLHttpRequest", event);
-				}
+				resolve(event);
 			};
 
 			this.xhr.onerror = reject;
@@ -77,7 +69,6 @@ class Segment
 
 	on_error(error: any)
 	{
-		console.log("Segment.on_error()", this.url.split('/').pop());
 		if(error.type == "abort")
 		{
 			console.log("Segment abort:", this.url.split('/').pop());
@@ -90,7 +81,6 @@ class Segment
 
 	abort()
 	{
-		console.log("Segment.abort()", this.url.split('/').pop());
 		// Propagate errors from rejected promises.
 		this.promise.catch(error => this.on_error(error));
 
@@ -101,7 +91,6 @@ class Segment
 
 	retry()
 	{
-		console.log("Segment.retry()", this.url.split('/').pop());
 		this.xhr.abort();
 		this.xhr.open("GET", this.url);
 		this.speed = 0;
@@ -183,13 +172,11 @@ class Buffer
 
 	abort_all()
 	{
-		console.log("Buffer.abort_all()");
 		this.segments.forEach(segment => segment.abort());
 	}
 
 	async take(index: any)
 	{
-		console.log("Buffer.take()", index);
 		// Async wait playlist information.
 		let playlist = await this.playlist;
 
@@ -227,7 +214,6 @@ class Buffer
 		// Async wait requested segment.
 		this.segments.get(index).requested = true;
 		let result = await this.segments.get(index).promise;
-		console.log("Buffer.take() - await this.segments.get(index).promise:", index, result, result.target, result.target.readyState, result.target.response);
 
 		// Predict and add next segment.
 		let next_index = Math.max(... this.segments.keys()) + 1;
@@ -239,14 +225,12 @@ class Buffer
 
 	remove_segment(index: any)
 	{
-		console.log("Buffer.remove_segment():", index);
 		this.segments.delete(index);
 		this.on_progress();
 	}
 
 	remove_requested_segments()
 	{
-		console.log("Buffer.remove_requested_segments()");
 		this.segments.forEach(async (segment, segment_index) =>
 		{
 			if(segment.requested == true)
@@ -267,7 +251,6 @@ class Buffer
 
 	handle_events(hls: any)
 	{
-		console.log("Buffer.handle_events()");
 		this.playlist = new Promise((resolve, reject) =>
 		{
 			hls.on(Hls.Events.LEVEL_LOADED, (event: any, data: any) =>
@@ -290,28 +273,23 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 
 	public async load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 	{
-		console.log("CustomLoader.load():", context.frag.sn);
 		try
 		{
 			let segment = await this.buffer.take(context.frag.sn);
-			console.log("CustomLoader.load() - callbacks.onSuccess():", context.frag.sn, segment);
 			callbacks.onSuccess({url: context.url, data: segment}, this.stats, context, null);
 		}
 		catch(error: any)
 		{
 			if(error.type == "abort" && callbacks.onAbort != undefined)
 			{
-				console.log("CustomLoader.load() - callbacks.onAbort():", context.frag.sn);
 				callbacks.onAbort(this.stats, context, null);
 			}
 			else
 			{
 				console.log("Segment error:", context.frag.sn, error);
-				console.log("CustomLoader.load() - callbacks.onError():", context.frag.sn);
 				callbacks.onError({code: 0, text: "error_text"}, context, null, this.stats);
 			}
 		}
-		console.log("CustomLoader.load() - this.buffer.remove_segment():", context.frag.sn);
 		this.buffer.remove_segment(context.frag.sn);
 	}
 
