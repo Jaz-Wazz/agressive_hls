@@ -2,30 +2,18 @@ import Hls, { FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loade
 
 class Segment
 {
-	/** @type XMLHttpRequest */
-	xhr = new XMLHttpRequest();
-
-	/** @type Promise */
-	promise;
-
-	/** @type number */
-	speed = 0;
-
-	/** @type number */
-	progress = 0;
-
-	/** @type number */
-	start_point = new Date().getTime();
+	public xhr: XMLHttpRequest = new XMLHttpRequest();
+	public promise: Promise<any>;
+	public speed: number = 0;
+	public progress: number = 0;
+	public start_point: number = new Date().getTime();
+	public requested: boolean = false;
+	public loaded: boolean = false;
 
 	/** @type Url */
 	url;
 
-	/** @type boolean */
-	requested = false;
-
-	loaded: boolean = false;
-
-	constructor(buffer: any, segment_url: any)
+	public constructor(buffer: Buffer, segment_url: any)
 	{
 		// Initialize url member.
 		this.url = segment_url;
@@ -33,6 +21,7 @@ class Segment
 		// Start async task and take his promise.
 		this.promise = new Promise((resolve, reject) =>
 		{
+
 			// Configure xhr object.
 			this.xhr.open("GET", segment_url);
 			this.xhr.responseType = "arraybuffer";
@@ -57,7 +46,7 @@ class Segment
 		});
 	}
 
-	on_progress(event: any)
+	public on_progress(event: ProgressEvent<EventTarget>): void
 	{
 		// Update segment speed.
 		let elapsed_time = new Date().getTime() - this.start_point;
@@ -66,7 +55,7 @@ class Segment
 		this.progress = event.loaded / event.total;
 	}
 
-	on_error(error: any)
+	public on_error(error: any): void
 	{
 		if(error.type == "abort")
 		{
@@ -78,7 +67,7 @@ class Segment
 		}
 	}
 
-	abort()
+	public abort(): void
 	{
 		// Propagate errors from rejected promises.
 		this.promise.catch(error => this.on_error(error));
@@ -88,7 +77,7 @@ class Segment
 		this.xhr.abort();
 	}
 
-	retry()
+	public retry(): void
 	{
 		this.xhr.abort();
 		this.xhr.open("GET", this.url);
