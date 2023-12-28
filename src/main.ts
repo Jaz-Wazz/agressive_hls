@@ -38,7 +38,6 @@ class Segment
 			this.xhr.responseType = "arraybuffer";
 
 			// Connect callbacks.
-			// this.xhr.onload = resolve;
 			this.xhr.onload = (event: ProgressEvent<EventTarget>) =>
 			{
 				this.loaded = true;
@@ -161,7 +160,7 @@ class Buffer
 			+ (Math.round(value.progress * 100).toString() + "%").padStart(10)
 			+ "\n";
 
-			// Это не должно вызвыватся для уже загруженных частей.
+			// Not call this for downloaded segements.
 			if(status_by_sras == "bad" && value.loaded == false) value.retry();
 		});
 
