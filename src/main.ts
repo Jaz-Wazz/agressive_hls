@@ -91,11 +91,6 @@ class Buffer
 	public	playlist: Fragment[] | null = null;
 	public	on_log: ((content: string) => void) | null = null;
 
-	public constructor()
-	{
-		console.log("Buffer created.");
-	}
-
 	private format(size: number): string
 	{
 		return (size / 131072).toFixed(2) + " mbit/s";
