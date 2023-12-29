@@ -87,18 +87,18 @@ class Segment
 
 class Buffer
 {
-	public playlist: Fragment[] | null = null;
-	public average_speed: number = 0;
-	public total_speed: number = 0;
-	public segments: Map<number, Segment> = new Map();
-	public on_log: ((content: string) => void) | null = null;
+	private	average_speed: number = 0;
+	private	total_speed: number = 0;
+	private	segments: Map<number, Segment> = new Map();
+	public	playlist: Fragment[] | null = null;
+	public	on_log: ((content: string) => void) | null = null;
 
 	public constructor()
 	{
 		console.log("Buffer created.");
 	}
 
-	public format(size: number): string
+	private format(size: number): string
 	{
 		return (size / 131072).toFixed(2) + " mbit/s";
 	}
