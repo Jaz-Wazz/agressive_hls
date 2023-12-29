@@ -187,22 +187,17 @@ class Buffer
 		}
 
 		let segment = this.segments.get(index);
-		if(segment != undefined)
-		{
-			segment.requested = true;
-			let buffer = await segment.promise;
+		if(segment == undefined) throw new Error(`Undefined access to ${index} segment.`);
 
-			// Predict and add next segment.
-			let next_index = Math.max(... this.segments.keys()) + 1;
-			if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
+		segment.requested = true;
+		let buffer = await segment.promise;
 
-			// Return requested segment data.
-			return buffer;
-		}
-		else
-		{
-			throw new Error(`Undefined access to ${index} segment.`);
-		}
+		// Predict and add next segment.
+		let next_index = Math.max(... this.segments.keys()) + 1;
+		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
+
+		// Return requested segment data.
+		return buffer;
 	}
 
 	public remove_segment(index: any): void
