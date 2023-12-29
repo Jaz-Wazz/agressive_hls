@@ -88,15 +88,14 @@ class Segment
 class Buffer
 {
 	public playlist: Fragment[] | null = null;
-	public text_area: HTMLTextAreaElement;
 	public average_speed: number = 0;
 	public total_speed: number = 0;
 	public segments: Map<number, Segment> = new Map();
+	public on_log: ((content: string) => void) | null = null;
 
-	public constructor(text_area: HTMLTextAreaElement)
+	public constructor()
 	{
 		console.log("Buffer created.");
-		this.text_area = text_area;
 	}
 
 	public format(size: number): string
@@ -106,17 +105,12 @@ class Buffer
 
 	public on_progress(): void
 	{
-		// Update total speed.
 		this.total_speed = 0;
 		this.segments.forEach(value => { this.total_speed += value.speed; });
-
-		// Update average speed.
 		this.average_speed = this.total_speed / this.segments.size;
 
-		// Print header.
-		this.text_area.textContent = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
+		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
 
-		// Print rows.
 		this.segments.forEach((value, key) =>
 		{
 			let speed_relative_average_speed = (value.speed / this.average_speed);
@@ -127,23 +121,23 @@ class Buffer
 				status_by_sras = (speed_relative_average_speed > 0.5) ? "good" : "bad";
 			}
 
-			this.text_area.textContent += ""
-			+ key.toString().padStart(7)
-			+ this.format(value.speed).padStart(13)
-			+ speed_relative_average_speed.toFixed(2).toString().padStart(6)
-			+ status_by_sras.padStart(7)
-			+ value.requested.toString().padStart(11)
-			+ value.loaded.toString().padStart(8)
-			+ (Math.round(value.progress * 100).toString() + "%").padStart(10)
-			+ "\n";
+			content += key.toString().padStart(7);
+			content += this.format(value.speed).padStart(13);
+			content += speed_relative_average_speed.toFixed(2).toString().padStart(6);
+			content += status_by_sras.padStart(7);
+			content += value.requested.toString().padStart(11);
+			content += value.loaded.toString().padStart(8);
+			content += (Math.round(value.progress * 100).toString() + "%").padStart(10);
+			content += "\n";
 
 			// Not call this for downloaded segements.
 			if(status_by_sras == "bad" && value.loaded == false) value.retry();
 		});
 
-		// Print other statistics.
-		this.text_area.textContent += `Average speed: ${this.format(this.average_speed)}.\n`;
-		this.text_area.textContent += `Total speed: ${this.format(this.total_speed)}.\n`;
+		content += `Average speed: ${this.format(this.average_speed)}.\n`;
+		content += `Total speed: ${this.format(this.total_speed)}.\n`;
+
+		if(this.on_log != null) this.on_log(content);
 	}
 
 	public abort_all(): void
@@ -287,9 +281,10 @@ window.onload = () =>
 
 	if(player instanceof HTMLVideoElement)
 	{
-		let buffer	= new Buffer(text_area);
+		let buffer	= new Buffer;
 		let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true, autoStartLoad: false});
 
+		buffer.on_log = (content) => text_area.textContent = content;
 		hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
 		{
 			buffer.playlist = data.details.fragments;
