@@ -87,8 +87,6 @@ class Segment
 
 class Buffer
 {
-	private	average_speed: number = 0;
-	private	total_speed: number = 0;
 	private	segments: Map<number, Segment> = new Map();
 	public	playlist: Fragment[] | null = null;
 	public	on_log: ((content: string) => void) | null = null;
@@ -105,15 +103,15 @@ class Buffer
 
 	public on_progress(): void
 	{
-		this.total_speed = 0;
-		this.segments.forEach(value => { this.total_speed += value.speed; });
-		this.average_speed = this.total_speed / this.segments.size;
+		let total_speed = 0;
+		this.segments.forEach(value => { total_speed += value.speed; });
+		let average_speed = total_speed / this.segments.size;
 
 		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
 
 		this.segments.forEach((value, key) =>
 		{
-			let speed_relative_average_speed = (value.speed / this.average_speed);
+			let speed_relative_average_speed = (value.speed / average_speed);
 			let status_by_sras = "wait";
 
 			if((new Date().getTime()) > value.start_point + 8000)
@@ -134,8 +132,8 @@ class Buffer
 			if(status_by_sras == "bad" && value.loaded == false) value.retry();
 		});
 
-		content += `Average speed: ${this.format(this.average_speed)}.\n`;
-		content += `Total speed: ${this.format(this.total_speed)}.\n`;
+		content += `Average speed: ${this.format(average_speed)}.\n`;
+		content += `Total speed: ${this.format(total_speed)}.\n`;
 
 		if(this.on_log != null) this.on_log(content);
 	}
