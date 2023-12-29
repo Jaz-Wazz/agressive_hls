@@ -211,6 +211,13 @@ class Buffer
 			}
 		});
 	}
+
+	public make_loader(): FragmentLoaderConstructor
+	{
+		let buffer = this;
+		class LoaderWrapper extends CustomLoader { constructor(config: HlsConfig) { super(config, buffer); } };
+		return LoaderWrapper;
+	}
 };
 
 class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderContext>> Hls.DefaultConfig.loader)
@@ -252,18 +259,6 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 	}
 }
 
-function make_custom_loader(buffer: Buffer): FragmentLoaderConstructor
-{
-	class CustomLoaderWrapper extends CustomLoader
-	{
-		constructor(config: HlsConfig)
-		{
-			super(config, buffer);
-		}
-	};
-	return CustomLoaderWrapper;
-}
-
 window.onload = () =>
 {
 	let player = document.getElementById("player");
@@ -274,7 +269,7 @@ window.onload = () =>
 	document.body.append(text_area);
 
 	let buffer	= new Buffer;
-	let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true, autoStartLoad: false});
+	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
 	buffer.on_log = (content) => text_area.textContent = content;
 	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
