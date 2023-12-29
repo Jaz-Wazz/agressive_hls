@@ -1,4 +1,4 @@
-import Hls, { FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
+import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
 
 class Segment
 {
@@ -90,7 +90,7 @@ class Segment
 
 class Buffer
 {
-	public playlist: any;
+	public playlist: Fragment[] | null = null;
 	public text_area: HTMLTextAreaElement;
 	public average_speed: number = 0;
 	public total_speed: number = 0;
@@ -156,8 +156,7 @@ class Buffer
 
 	public async take(index: any): Promise<ArrayBuffer>
 	{
-		// Async wait playlist information.
-		let playlist = await this.playlist;
+		if(this.playlist == null) throw new Error("Playlist information not provided.");
 
 		// Long higher jump. (Full rebuffer)
 		// [10] [11] [12] [13] [14] [15] -> !20 -> [20] [21] [22] [23] [24] [25] /-> []
@@ -182,11 +181,11 @@ class Buffer
 		});
 
 		// Add missing window segments.
-		for(let i = index; i < index + 6 && i < playlist.length; i++)
+		for(let i = index; i < index + 6 && i < this.playlist.length; i++)
 		{
 			if(this.segments.has(i) == false)
 			{
-				this.segments.set(i, new Segment(this, playlist[i].url));
+				this.segments.set(i, new Segment(this, this.playlist[i].url));
 			}
 		}
 
@@ -198,7 +197,7 @@ class Buffer
 
 			// Predict and add next segment.
 			let next_index = Math.max(... this.segments.keys()) + 1;
-			if(next_index < playlist.length) this.segments.set(next_index, new Segment(this, playlist[next_index].url));
+			if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
 
 			// Return requested segment data.
 			return buffer;
@@ -221,8 +220,7 @@ class Buffer
 		{
 			if(segment.requested == true)
 			{
-				// Async wait playlist information.
-				let playlist = await this.playlist;
+				if(this.playlist == null) throw new Error("Playlist information not provided.");
 
 				// Abort and remove.
 				segment.abort();
@@ -230,19 +228,8 @@ class Buffer
 
 				// Predict and add next segment.
 				let next_index = Math.max(... this.segments.keys()) + 1;
-				if(next_index < playlist.length) this.segments.set(next_index, new Segment(this, playlist[next_index].url));
+				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
 			}
-		});
-	}
-
-	public handle_events(hls: Hls): void
-	{
-		this.playlist = new Promise((resolve, reject) =>
-		{
-			hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
-			{
-				resolve(data.details.fragments);
-			});
 		});
 	}
 };
@@ -309,8 +296,13 @@ window.onload = () =>
 	if(player instanceof HTMLVideoElement)
 	{
 		let buffer	= new Buffer(text_area);
-		let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true});
-		buffer.handle_events(hls);
+		let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true, autoStartLoad: false});
+
+		hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
+		{
+			buffer.playlist = data.details.fragments;
+			hls.startLoad();
+		});
 
 		hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
 		hls.attachMedia(player);
