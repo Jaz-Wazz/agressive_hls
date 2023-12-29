@@ -9,21 +9,18 @@ class Segment
 	public start_point: number = new Date().getTime();
 	public requested: boolean = false;
 	public loaded: boolean = false;
+	public url: string;
 
-	/** @type Url */
-	url;
-
-	public constructor(buffer: Buffer, segment_url: any)
+	public constructor(buffer: Buffer, url: string)
 	{
 		// Initialize url member.
-		this.url = segment_url;
+		this.url = url;
 
 		// Start async task and take his promise.
 		this.promise = new Promise((resolve, reject) =>
 		{
-
 			// Configure xhr object.
-			this.xhr.open("GET", segment_url);
+			this.xhr.open("GET", url);
 			this.xhr.responseType = "arraybuffer";
 
 			// Connect callbacks.
