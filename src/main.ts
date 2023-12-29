@@ -142,17 +142,47 @@ class Buffer
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
 
+		// let array = new Array<number>;
+
 		// Long higher jump. (Full rebuffer)
 		// [10] [11] [12] [13] [14] [15] -> !20 -> [20] [21] [22] [23] [24] [25] /-> []
+		// array.length = 0;
+		// array.push(20, 21, 22, 23, 24, 25);
 
 		// Long lower jump. (Full rebuffer)
 		// [10] [11] [12] [13] [14] [15] -> !3  -> [ 3] [ 4] [ 5] [ 6] [ 7] [ 8] /-> []
+		// array.length = 0;
+		// array.push(3, 4, 5, 6, 7, 8);
 
 		// Short higher jump. (Save: [13] [14] [15], Add: [16] [17] [18])
 		// [10] [11] [12] [13] [14] [15] -> !13 -> [13] [14] [15] [16] [17] [18] /-> [13, 14, 15]
+		// array.shift();
+		// array.shift();
+		// array.shift();
+		// array.push(16, 17, 18);
+
+		// [10] [11] [12] [13] [14] [15]
+		//                [13] [14] [15] [16] [17] [18]
 
 		// Short lower jump. (Save: [10] [11] [12], Add: [ 7] [ 8] [ 9])
 		// [10] [11] [12] [13] [14] [15] -> !7  -> [ 7] [ 8] [ 9] [10] [11] [12] /-> [10, 11, 12]
+
+		//                [10] [11] [12] [13] [14] [15]
+		// [ 7] [ 8] [ 9] [10] [11] [12]
+
+		// array.unshift(7, 8, 9);
+		// array.pop();
+		// array.pop();
+		// array.pop();
+
+		// for(let segment_index of array)
+		// {
+		// 	if(segment_index < index || segment_index >= index + 6)
+		// 	{
+		// 		array.splice(segment_index, 1);
+		// 		array.push(array[array.length - 1] + 1);
+		// 	}
+		// }
 
 		// Remove out of window segments.
 		this.segments.forEach((segment, segment_index) =>
@@ -182,6 +212,7 @@ class Buffer
 		// Predict and add next segment.
 		let next_index = Math.max(... this.segments.keys()) + 1;
 		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
+		// array.push(array[array.length - 1] + 1);
 
 		// Return requested segment data.
 		return buffer;
@@ -274,6 +305,7 @@ window.onload = () =>
 	buffer.on_log = (content) => text_area.textContent = content;
 	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
 
-	hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
+	// hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
+	hls.loadSource('http://ia903206.s3dns.us.archive.org/79edea20/playlist/index-dvr.m3u8');
 	hls.attachMedia(player);
 };
