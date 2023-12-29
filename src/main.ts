@@ -273,29 +273,19 @@ function make_custom_loader(buffer: Buffer): FragmentLoaderConstructor
 
 window.onload = () =>
 {
+	let player = document.getElementById("player");
+	if(!(player instanceof HTMLVideoElement)) throw new Error("Not find #player.");
+
 	let text_area = document.createElement("textarea");
 	text_area.spellcheck = false;
 	document.body.append(text_area);
 
-	let player = document.getElementById("player");
+	let buffer	= new Buffer;
+	let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true, autoStartLoad: false});
 
-	if(player instanceof HTMLVideoElement)
-	{
-		let buffer	= new Buffer;
-		let hls		= new Hls({fLoader: make_custom_loader(buffer), enableWorker: true, autoStartLoad: false});
+	buffer.on_log = (content) => text_area.textContent = content;
+	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
 
-		buffer.on_log = (content) => text_area.textContent = content;
-		hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
-		{
-			buffer.playlist = data.details.fragments;
-			hls.startLoad();
-		});
-
-		hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
-		hls.attachMedia(player);
-	}
-	else
-	{
-		console.error("Not find #player.");
-	}
+	hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
+	hls.attachMedia(player);
 };
