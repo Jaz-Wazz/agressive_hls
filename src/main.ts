@@ -102,7 +102,7 @@ class Buffer
 		this.segments.forEach(value => { total_speed += value.speed; });
 		let average_speed = total_speed / this.segments.size;
 
-		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
+		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress                         Server\n";
 
 		this.segments.forEach((value, key) =>
 		{
@@ -121,6 +121,7 @@ class Buffer
 			content += value.requested.toString().padStart(11);
 			content += value.loaded.toString().padStart(8);
 			content += (Math.round(value.progress * 100).toString() + "%").padStart(10);
+			content += (new URL(value.url)).host.padStart(31);
 			content += "\n";
 
 			// Not call this for downloaded segements.
@@ -136,6 +137,28 @@ class Buffer
 	public abort_all(): void
 	{
 		this.segments.forEach(segment => segment.abort());
+	}
+
+	private replace_url_host(original: string): string
+	{
+		let first = 0;
+		let second = 0;
+		for(let [index, segment] of this.segments)
+		{
+			if(segment.loaded == false)
+			{
+				let host = new URL(segment.url).host;
+				if(host == "ia601302.s3dns.us.archive.org") first++;
+				if(host == "ia801302.s3dns.us.archive.org") second++;
+			}
+		}
+		console.log(`First: ${first}, Second: ${second}.`);
+
+		let url = new URL(original);
+		if(second < first)	url.host = "ia801302.s3dns.us.archive.org";
+		if(first < second)	url.host = "ia601302.s3dns.us.archive.org";
+		if(first == second)	url.host = "ia601302.s3dns.us.archive.org";
+		return url.toString();
 	}
 
 	public async take(index: any): Promise<ArrayBuffer>
@@ -157,7 +180,7 @@ class Buffer
 		// Remove out of window segments.
 		this.segments.forEach((segment, segment_index) =>
 		{
-			if(segment_index < index || segment_index >= index + 6)
+			if(segment_index < index || segment_index >= index + 12)
 			{
 				segment.abort();
 				this.segments.delete(segment_index);
@@ -165,11 +188,17 @@ class Buffer
 		});
 
 		// Add missing window segments.
-		for(let i = index; i < index + 6 && i < this.playlist.length; i++)
+		for(let i = index; i < index + 12 && i < this.playlist.length; i++)
 		{
 			if(this.segments.has(i) == false)
 			{
-				this.segments.set(i, new Segment(this, this.playlist[i].url));
+				// for(let [index, segment] of this.segments)
+				// {
+				// 	new URL(segment.url).host
+				// }
+				// let url = new URL(this.playlist[i].url).host = "ia903206.s3dns.us.archive.org";
+
+				this.segments.set(i, new Segment(this, this.replace_url_host(this.playlist[i].url)));
 			}
 		}
 
@@ -181,7 +210,7 @@ class Buffer
 
 		// Predict and add next segment.
 		let next_index = Math.max(... this.segments.keys()) + 1;
-		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
+		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.replace_url_host(this.playlist[next_index].url)));
 
 		// Return requested segment data.
 		return buffer;
@@ -207,7 +236,7 @@ class Buffer
 
 				// Predict and add next segment.
 				let next_index = Math.max(... this.segments.keys()) + 1;
-				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
+				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.replace_url_host(this.playlist[next_index].url)));
 			}
 		});
 	}
@@ -274,6 +303,8 @@ window.onload = () =>
 	buffer.on_log = (content) => text_area.textContent = content;
 	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
 
-	hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
+	// ia601302.s3dns.us.archive.org
+	// ia801302.s3dns.us.archive.org
+	hls.loadSource('http://ia601302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
 	hls.attachMedia(player);
 };

@@ -28,8 +28,8 @@ body > #player, body > .plyr
 textarea
 {
 	position: absolute;
-	width: 442px;
-	height: 160px;
+	width: 700px;
+	height: 260px;
 	top: 5px;
 	left: 5px;
 	background-color: rgba(0, 0, 0, 0.5);
