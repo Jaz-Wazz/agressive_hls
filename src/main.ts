@@ -259,6 +259,16 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 	}
 }
 
+declare global
+{
+	interface Window
+	{
+		hls: Hls;
+		player: HTMLVideoElement;
+		buffer: Buffer;
+	}
+}
+
 window.onload = () =>
 {
 	let player = document.getElementById("player");
@@ -269,11 +279,16 @@ window.onload = () =>
 	document.body.append(text_area);
 
 	let buffer	= new Buffer;
-	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
+	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false, debug: true});
+	// player.currentTime = 3600;
 
 	buffer.on_log = (content) => text_area.textContent = content;
-	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
+	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(3600); });
 
 	hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
 	hls.attachMedia(player);
+
+	window.player = player;
+	window.hls = hls;
+	window.buffer = buffer;
 };
