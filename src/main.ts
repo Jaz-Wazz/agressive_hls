@@ -193,25 +193,6 @@ class Buffer
 		this.on_progress();
 	}
 
-	public remove_requested_segments(): void
-	{
-		this.segments.forEach(async (segment, segment_index) =>
-		{
-			if(segment.requested == true)
-			{
-				if(this.playlist == null) throw new Error("Playlist information not provided.");
-
-				// Abort and remove.
-				segment.abort();
-				this.remove_segment(segment_index);
-
-				// Predict and add next segment.
-				let next_index = Math.max(... this.segments.keys()) + 1;
-				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
-			}
-		});
-	}
-
 	public make_loader(): FragmentLoaderConstructor
 	{
 		let buffer = this;
@@ -241,7 +222,7 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 		{
 			if(error.type == "abort" && callbacks.onAbort != undefined)
 			{
-				callbacks.onAbort(this.stats, context, null);
+				console.log("Requested segment abort.");
 			}
 			else
 			{
@@ -255,7 +236,6 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 	public abort(): void
 	{
 		console.log("Loader abort.");
-		this.buffer.remove_requested_segments();
 	}
 }
 
