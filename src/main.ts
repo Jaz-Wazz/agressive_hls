@@ -27,7 +27,6 @@ class Segment
 
 	public on_progress(event: ProgressEvent<EventTarget>): void
 	{
-		// Update segment speed.
 		let elapsed_time = new Date().getTime() - this.start_point;
 		let multiplier = 1000 / elapsed_time;
 		this.speed = event.loaded * multiplier;
@@ -101,8 +100,7 @@ class Buffer
 			content += (Math.round(value.progress * 100).toString() + "%").padStart(10);
 			content += "\n";
 
-			// Not call this for downloaded segements.
-			if(status_by_sras == "bad" && value.loaded == false) value.retry();
+			if(status_by_sras == "bad" && value.loaded == false) value.retry(); // Not call this for downloaded segements.
 		});
 
 		content += `Average speed: ${this.format(average_speed)}.\n`;
@@ -119,18 +117,6 @@ class Buffer
 	public take(index: any, callback: (buffer: ArrayBuffer) => void): void
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
-
-		// Long higher jump. (Full rebuffer)
-		// [10] [11] [12] [13] [14] [15] -> !20 -> [20] [21] [22] [23] [24] [25] /-> []
-
-		// Long lower jump. (Full rebuffer)
-		// [10] [11] [12] [13] [14] [15] -> !3  -> [ 3] [ 4] [ 5] [ 6] [ 7] [ 8] /-> []
-
-		// Short higher jump. (Save: [13] [14] [15], Add: [16] [17] [18])
-		// [10] [11] [12] [13] [14] [15] -> !13 -> [13] [14] [15] [16] [17] [18] /-> [13, 14, 15]
-
-		// Short lower jump. (Save: [10] [11] [12], Add: [ 7] [ 8] [ 9])
-		// [10] [11] [12] [13] [14] [15] -> !7  -> [ 7] [ 8] [ 9] [10] [11] [12] /-> [10, 11, 12]
 
 		// Remove out of window segments.
 		this.segments.forEach((segment, segment_index) =>
