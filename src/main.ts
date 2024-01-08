@@ -3,7 +3,6 @@ import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsCon
 class Segment
 {
 	public xhr: XMLHttpRequest = new XMLHttpRequest();
-	public promise: Promise<ArrayBuffer>;
 	public speed: number = 0;
 	public progress: number = 0;
 	public start_point: number = new Date().getTime();
@@ -13,34 +12,17 @@ class Segment
 
 	public constructor(buffer: Buffer, url: string)
 	{
-		// Initialize url member.
 		this.url = url;
 
-		// Start async task and take his promise.
-		this.promise = new Promise((resolve, reject) =>
-		{
-			// Configure xhr object.
-			this.xhr.open("GET", url);
-			this.xhr.responseType = "arraybuffer";
-
-			// Connect callbacks.
-			this.xhr.onload = () =>
-			{
-				this.loaded = true;
-				resolve(this.xhr.response);
-			};
-
-			this.xhr.onerror = reject;
-			this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
-
-			// Supress browser cache.
-			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
-			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
-			this.xhr.setRequestHeader("Pragma", "no-cache");
-
-			// Send request.
-			this.xhr.send();
-		});
+		this.xhr.open("GET", url);
+		this.xhr.responseType = "arraybuffer";
+		this.xhr.onload = () => { this.loaded = true; };
+		this.xhr.onerror = error => this.on_error(error);
+		this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
+		this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+		this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+		this.xhr.setRequestHeader("Pragma", "no-cache");
+		this.xhr.send();
 	}
 
 	public on_progress(event: ProgressEvent<EventTarget>): void
@@ -66,10 +48,6 @@ class Segment
 
 	public abort(): void
 	{
-		// Propagate errors from rejected promises.
-		this.promise.catch(error => this.on_error(error));
-
-		// Abort request and reject linked promise.
 		this.xhr.onabort = this.xhr.onerror;
 		this.xhr.abort();
 	}
@@ -138,7 +116,7 @@ class Buffer
 		this.segments.forEach(segment => segment.abort());
 	}
 
-	public async take(index: any): Promise<ArrayBuffer>
+	public take(index: any, callback: (buffer: ArrayBuffer) => void): void
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
 
@@ -176,20 +154,31 @@ class Buffer
 		let segment = this.segments.get(index);
 		if(segment == undefined) throw new Error(`Undefined access to ${index} segment.`);
 
-		segment.requested = true;
-		let buffer = await segment.promise;
+		if(segment.loaded)
+		{
+			callback(segment.xhr.response);
+		}
+		else
+		{
+			segment.requested = true;
+			segment.xhr.onload = (event) =>
+			{
+				if(segment == undefined) throw new Error("undefined_segment");
+				segment.loaded = true;
+				callback(segment.xhr.response);
+			};
+		}
+	}
+
+	public remove_segment(index: any): void
+	{
+		if(this.playlist == null) throw new Error("Playlist information not provided.");
+		this.segments.delete(index);
 
 		// Predict and add next segment.
 		let next_index = Math.max(... this.segments.keys()) + 1;
 		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
 
-		// Return requested segment data.
-		return buffer;
-	}
-
-	public remove_segment(index: any): void
-	{
-		this.segments.delete(index);
 		this.on_progress();
 	}
 
@@ -211,26 +200,13 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 		this.buffer = buffer;
 	}
 
-	public async load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
+	public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 	{
-		try
+		this.buffer.take(context.frag.sn, (buffer) =>
 		{
-			let segment = await this.buffer.take(context.frag.sn);
-			callbacks.onSuccess({url: context.url, data: segment}, this.stats, context, null);
-		}
-		catch(error: any)
-		{
-			if(error.type == "abort" && callbacks.onAbort != undefined)
-			{
-				console.log("Requested segment abort.");
-			}
-			else
-			{
-				console.log("Segment error:", context.frag.sn, error);
-				callbacks.onError({code: 0, text: "error_text"}, context, null, this.stats);
-			}
-		}
-		this.buffer.remove_segment(context.frag.sn);
+			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
+			this.buffer.remove_segment(context.frag.sn);
+		});
 	}
 
 	public abort(): void
