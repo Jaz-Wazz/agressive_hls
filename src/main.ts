@@ -254,6 +254,6 @@ window.onload = () =>
 	buffer.on_log = (content) => text_area.textContent = content;
 	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
 
-	hls.loadSource('http://ia801302.s3dns.us.archive.org/267c08db/playlist/index-dvr.m3u8');
+	hls.loadSource('http://ia600507.s3dns.us.archive.org/e82f3235/playlist/index-muted-1IJF53JNFA.m3u8');
 	hls.attachMedia(player);
 };
