@@ -6,3 +6,4 @@
 - [ ] Simplify and optimize code and containers.
 - [ ] Make buffer customiziable with many sub-system's.
 - [ ] Stabilize behavior on segment error.
+- [ ] System verbose mechanism.
