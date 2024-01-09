@@ -194,8 +194,19 @@ window.onload = () =>
 	let buffer	= new Buffer;
 	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
+	player.ontimeupdate = () =>
+	{
+		if(!(player instanceof HTMLVideoElement)) throw new Error("Not find #player.");
+		let time = Math.round(player.currentTime).toString();
+		if(window.location.hash != time) window.location.hash = time;
+	};
+
 	buffer.on_log = (content) => text_area.textContent = content;
-	hls.on(Hls.Events.LEVEL_LOADED, (event, data) => { buffer.playlist = data.details.fragments; hls.startLoad(); });
+	hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
+	{
+		buffer.playlist = data.details.fragments;
+		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
+	});
 
 	hls.loadSource('http://ia801702.s3dns.us.archive.org/d0e79e1b/index-muted-6ATD5HEJGH.m3u8');
 	hls.attachMedia(player);
