@@ -140,11 +140,8 @@ class Buffer
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
 		this.segments.delete(index);
-
-		// Predict and add next segment.
 		let next_index = Math.max(... this.segments.keys()) + 1;
 		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
-
 		this.on_progress();
 	}
 
