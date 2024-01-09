@@ -78,6 +78,7 @@ class Buffer
 
 	public constructor(config: {connection_count: number} = {connection_count: 6})
 	{
+		console.log("[Buffer::constructor]");
 		this.connection_count = config.connection_count;
 	}
 
@@ -111,17 +112,31 @@ class Buffer
 
 	public subscribe(index: number, callback: (buffer: ArrayBuffer) => void): void
 	{
+		console.log("[Buffer::subscribe] - Run: ", index);
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
+
+		console.log("[Buffer::subscribe] - First state: ", this.segments);
 
 		for(let [i, segment] of this.segments)
 		{
-			if(i < index || i >= index + this.connection_count) { segment.abort(); this.segments.delete(i); }
+			if(i < index || i >= index + this.connection_count)
+			{
+				segment.abort();
+				this.segments.delete(i);
+				console.log("[Buffer::subscribe] - Remove: ", i);
+			}
 		}
 
 		for(let i = index; i < index + this.connection_count && i < this.playlist.length; i++)
 		{
-			if(!this.segments.has(i)) this.segments.set(i, new Segment(this, this.playlist[i].url));
+			if(!this.segments.has(i))
+			{
+				this.segments.set(i, new Segment(this, this.playlist[i].url));
+				console.log("[Buffer::subscribe] - Add: ", i);
+			}
 		}
+
+		console.log("[Buffer::subscribe] - Second state: ", this.segments);
 
 		let segment = this.segments.get(index);
 		if(segment == undefined) throw new Error(`Undefined access to ${index} segment.`);
@@ -129,20 +144,26 @@ class Buffer
 		if(segment.loaded)
 		{
 			callback(segment.xhr.response);
+			console.log("[Buffer::subscribe] - Fast callback: ", index, segment.xhr.response);
 		}
 		else
 		{
 			segment.requested = true;
+			console.log("[Buffer::subscribe] - Long callback: ", index);
 			segment.xhr.onload = () =>
 			{
 				if(segment == undefined) throw new Error("undefined_segment");
 				if(this.playlist == null) throw new Error("Playlist information not provided.");
+				console.log("[Buffer::subscribe] - Long callback triggered: ", index, segment.xhr.response);
 
 				segment.loaded = true;
 				callback(segment.xhr.response);
 
+				console.log("[Buffer::subscribe] - End remove: ", index);
 				this.segments.delete(index);
+
 				let next_index = Math.max(... this.segments.keys()) + 1;
+				console.log("[Buffer::subscribe] - End add: ", next_index);
 				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
 				this.on_progress();
 			};
@@ -151,6 +172,7 @@ class Buffer
 
 	public make_loader(): FragmentLoaderConstructor
 	{
+		console.log("[Buffer::make_loader]");
 		let buffer = this;
 		class LoaderWrapper extends CustomLoader { constructor(config: HlsConfig) { super(config, buffer); } };
 		return LoaderWrapper;
@@ -163,22 +185,25 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 
 	public constructor(config: HlsConfig, buffer: Buffer)
 	{
+		console.log("[Loader::constructor]", config, buffer);
 		super(config);
 		this.buffer = buffer;
 	}
 
 	public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 	{
+		console.log("[Loader::load]", context.frag.sn);
 		if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
 		this.buffer.subscribe(context.frag.sn, (buffer) =>
 		{
+			console.log("[Loader::callback]", context.frag.sn, buffer);
 			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
 		});
 	}
 
 	public abort(): void
 	{
-		console.log("Loader abort.");
+		console.log("[Loader::abort]");
 	}
 }
 
@@ -208,6 +233,6 @@ window.onload = () =>
 		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
 	});
 
-	hls.loadSource('http://ia801702.s3dns.us.archive.org/d0e79e1b/index-muted-6ATD5HEJGH.m3u8');
+	hls.loadSource('http://ia601203.s3dns.us.archive.org/4ffe6664/playlist/index-dvr.m3u8');
 	hls.attachMedia(player);
 };
