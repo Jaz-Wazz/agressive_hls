@@ -3,15 +3,15 @@ import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsCon
 class Segment
 {
 	private buffer: Buffer;
+	private start_point: number = new Date().getTime();
+	private url: string;
 	public xhr: XMLHttpRequest = new XMLHttpRequest();
 	public speed: number = 0;
 	public speed_rel_avg: number = 0;
 	public speed_rel_avg_stat: "wait" | "good" | "bad" = "wait";
 	public progress: number = 0;
-	public start_point: number = new Date().getTime();
 	public requested: boolean = false;
 	public loaded: boolean = false;
-	public url: string;
 
 	public constructor(buffer: Buffer, url: string)
 	{
@@ -72,10 +72,10 @@ class Segment
 class Buffer
 {
 	private	segments: Map<number, Segment> = new Map();
-	public	playlist: Fragment[] | null = null;
-	public	on_log: ((content: string) => void) | null = null;
-	public	speed_total: number = 0;
-	public	speed_avg: number = 0;
+	public playlist: Fragment[] | null = null;
+	public on_log: ((content: string) => void) | null = null;
+	public speed_total: number = 0;
+	public speed_avg: number = 0;
 
 	public on_progress(): void
 	{
