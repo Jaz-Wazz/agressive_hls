@@ -9,3 +9,4 @@
 - [x] Simplify logging function.
 - [x] Link "remove_segment" and "predict_new_segment" mechanism's.
 - [ ] Review statistics / logs information.
+- [ ] Fix last "Loaded" stats not update on all segments loaded.
