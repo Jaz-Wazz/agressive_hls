@@ -103,11 +103,6 @@ class Buffer
 		if(this.on_log != null) this.on_log(content);
 	}
 
-	public abort_all(): void
-	{
-		this.segments.forEach(segment => segment.abort());
-	}
-
 	public take(index: number, callback: (buffer: ArrayBuffer) => void): void
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
