@@ -112,23 +112,14 @@ class Buffer
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
 
-		// Remove out of window segments.
-		this.segments.forEach((segment, segment_index) =>
+		for(let [i, segment] of this.segments)
 		{
-			if(segment_index < index || segment_index >= index + 6)
-			{
-				segment.abort();
-				this.segments.delete(segment_index);
-			}
-		});
+			if(i < index || i >= index + 6) { segment.abort(); this.segments.delete(i); }
+		}
 
-		// Add missing window segments.
 		for(let i = index; i < index + 6 && i < this.playlist.length; i++)
 		{
-			if(this.segments.has(i) == false)
-			{
-				this.segments.set(i, new Segment(this, this.playlist[i].url));
-			}
+			if(!this.segments.has(i)) this.segments.set(i, new Segment(this, this.playlist[i].url));
 		}
 
 		let segment = this.segments.get(index);
