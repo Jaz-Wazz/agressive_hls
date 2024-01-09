@@ -108,7 +108,7 @@ class Buffer
 		this.segments.forEach(segment => segment.abort());
 	}
 
-	public take(index: any, callback: (buffer: ArrayBuffer) => void): void
+	public take(index: number, callback: (buffer: ArrayBuffer) => void): void
 	{
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
 
@@ -182,6 +182,7 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 
 	public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 	{
+		if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
 		this.buffer.take(context.frag.sn, (buffer) =>
 		{
 			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
