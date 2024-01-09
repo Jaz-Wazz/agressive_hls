@@ -69,9 +69,8 @@ class Buffer
 
 	public on_progress(): void
 	{
-		let total_speed = 0;
-		this.segments.forEach(value => { total_speed += value.speed; });
-		let average_speed = total_speed / this.segments.size;
+		let total_speed		= [...this.segments.values()].reduce((acc, val) => acc + val.speed, 0);
+		let average_speed	= total_speed / this.segments.size;
 
 		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
 
