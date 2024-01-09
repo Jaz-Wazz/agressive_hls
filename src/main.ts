@@ -60,9 +60,7 @@ class Segment
 	{
 		this.xhr.abort();
 		this.xhr.open("GET", this.url);
-		this.speed = 0;
-		this.progress = 0;
-		this.speed_rel_avg = 0;
+		this.speed = this.progress = this.speed_rel_avg = 0;
 		this.speed_rel_avg_stat = "wait";
 		this.start_point = new Date().getTime();
 		this.xhr.send();

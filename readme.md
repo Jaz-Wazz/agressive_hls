@@ -3,9 +3,9 @@
 - [ ] Make library namespace and file.
 - [ ] Segment progress event and display.
 - [ ] Custom player controls for fix other issues.
-- [ ] Simplify and optimize code and containers.
 - [ ] Make buffer customiziable with many sub-system's.
 - [x] Stabilize behavior on segment error.
 - [ ] System verbose mechanism.
 - [x] Simplify logging function.
 - [x] Link "remove_segment" and "predict_new_segment" mechanism's.
+- [ ] Review statistics / logs information.
