@@ -130,19 +130,17 @@ class Buffer
 			segment.xhr.onload = (event) =>
 			{
 				if(segment == undefined) throw new Error("undefined_segment");
+				if(this.playlist == null) throw new Error("Playlist information not provided.");
+
 				segment.loaded = true;
 				callback(segment.xhr.response);
+
+				this.segments.delete(index);
+				let next_index = Math.max(... this.segments.keys()) + 1;
+				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
+				this.on_progress();
 			};
 		}
-	}
-
-	public remove_segment(index: any): void
-	{
-		if(this.playlist == null) throw new Error("Playlist information not provided.");
-		this.segments.delete(index);
-		let next_index = Math.max(... this.segments.keys()) + 1;
-		if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
-		this.on_progress();
 	}
 
 	public make_loader(): FragmentLoaderConstructor
@@ -169,7 +167,6 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 		this.buffer.take(context.frag.sn, (buffer) =>
 		{
 			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
-			this.buffer.remove_segment(context.frag.sn);
 		});
 	}
 
