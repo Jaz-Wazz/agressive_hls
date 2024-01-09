@@ -2,8 +2,11 @@ import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsCon
 
 class Segment
 {
+	private buffer: Buffer;
 	public xhr: XMLHttpRequest = new XMLHttpRequest();
 	public speed: number = 0;
+	public speed_rel_avg: number = 0;
+	public speed_rel_avg_stat: "wait" | "good" | "bad" = "wait";
 	public progress: number = 0;
 	public start_point: number = new Date().getTime();
 	public requested: boolean = false;
@@ -13,6 +16,7 @@ class Segment
 	public constructor(buffer: Buffer, url: string)
 	{
 		this.url = url;
+		this.buffer = buffer;
 
 		this.xhr.open("GET", url);
 		this.xhr.responseType = "arraybuffer";
@@ -31,6 +35,13 @@ class Segment
 		let multiplier = 1000 / elapsed_time;
 		this.speed = event.loaded * multiplier;
 		this.progress = event.loaded / event.total;
+
+		if(elapsed_time > 8000)
+		{
+			this.speed_rel_avg		= this.speed / this.buffer.speed_avg;
+			this.speed_rel_avg_stat	= this.speed_rel_avg > 0.5 ? "good" : "bad";
+			if(this.speed_rel_avg < 0.5 && !this.loaded) this.retry();
+		}
 	}
 
 	public on_error(error: any): void
@@ -51,6 +62,8 @@ class Segment
 		this.xhr.open("GET", this.url);
 		this.speed = 0;
 		this.progress = 0;
+		this.speed_rel_avg = 0;
+		this.speed_rel_avg_stat = "wait";
 		this.start_point = new Date().getTime();
 		this.xhr.send();
 	}
@@ -61,45 +74,35 @@ class Buffer
 	private	segments: Map<number, Segment> = new Map();
 	public	playlist: Fragment[] | null = null;
 	public	on_log: ((content: string) => void) | null = null;
-
-	private format(size: number): string
-	{
-		return (size / 131072).toFixed(2) + " mbit/s";
-	}
+	public	speed_total: number = 0;
+	public	speed_avg: number = 0;
 
 	public on_progress(): void
 	{
-		let total_speed		= [...this.segments.values()].reduce((acc, val) => acc + val.speed, 0);
-		let average_speed	= total_speed / this.segments.size;
+		this.speed_total	= [...this.segments.values()].reduce((acc, val) => acc + val.speed, 0);
+		this.speed_avg		= this.speed_total / this.segments.size;
 
-		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
-
-		for(let [index, segment] of this.segments)
+		if(this.on_log != null)
 		{
-			let speed_relative_average_speed = (segment.speed / average_speed);
-			let status_by_sras = "wait";
+			let format	= (size: number) => (size / 131072).toFixed(2) + " mbit/s";
+			let content	= "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
 
-			if((new Date().getTime()) > segment.start_point + 8000)
+			for(let [index, segment] of this.segments)
 			{
-				status_by_sras = (speed_relative_average_speed > 0.5) ? "good" : "bad";
+				content += index.toString().padStart(7);
+				content += format(segment.speed).padStart(13);
+				content += segment.speed_rel_avg.toFixed(2).toString().padStart(6);
+				content += segment.speed_rel_avg_stat.padStart(7);
+				content += segment.requested.toString().padStart(11);
+				content += segment.loaded.toString().padStart(8);
+				content += (Math.round(segment.progress * 100).toString() + "%").padStart(10);
+				content += "\n";
 			}
 
-			content += index.toString().padStart(7);
-			content += this.format(segment.speed).padStart(13);
-			content += speed_relative_average_speed.toFixed(2).toString().padStart(6);
-			content += status_by_sras.padStart(7);
-			content += segment.requested.toString().padStart(11);
-			content += segment.loaded.toString().padStart(8);
-			content += (Math.round(segment.progress * 100).toString() + "%").padStart(10);
-			content += "\n";
-
-			if(status_by_sras == "bad" && segment.loaded == false) segment.retry(); // Not call this for downloaded segements.
+			content += `Average speed: ${format(this.speed_avg)}.\n`;
+			content += `Total speed: ${format(this.speed_total)}.\n`;
+			this.on_log(content);
 		}
-
-		content += `Average speed: ${this.format(average_speed)}.\n`;
-		content += `Total speed: ${this.format(total_speed)}.\n`;
-
-		if(this.on_log != null) this.on_log(content);
 	}
 
 	public take(index: number, callback: (buffer: ArrayBuffer) => void): void
