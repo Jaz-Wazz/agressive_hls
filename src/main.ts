@@ -70,10 +70,16 @@ class Segment
 class Buffer
 {
 	private	segments: Map<number, Segment> = new Map();
+	private connection_count: number = 0;
 	public playlist: Fragment[] | null = null;
 	public on_log: ((content: string) => void) | null = null;
 	public speed_total: number = 0;
 	public speed_avg: number = 0;
+
+	public constructor(config: {connection_count: number} = {connection_count: 6})
+	{
+		this.connection_count = config.connection_count;
+	}
 
 	public on_progress(): void
 	{
@@ -109,10 +115,10 @@ class Buffer
 
 		for(let [i, segment] of this.segments)
 		{
-			if(i < index || i >= index + 6) { segment.abort(); this.segments.delete(i); }
+			if(i < index || i >= index + this.connection_count) { segment.abort(); this.segments.delete(i); }
 		}
 
-		for(let i = index; i < index + 6 && i < this.playlist.length; i++)
+		for(let i = index; i < index + this.connection_count && i < this.playlist.length; i++)
 		{
 			if(!this.segments.has(i)) this.segments.set(i, new Segment(this, this.playlist[i].url));
 		}
