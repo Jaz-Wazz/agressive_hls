@@ -5,7 +5,7 @@
 - [ ] Custom player controls for fix other issues.
 - [ ] Simplify and optimize code and containers.
 - [ ] Make buffer customiziable with many sub-system's.
-- [ ] Stabilize behavior on segment error.
+- [x] Stabilize behavior on segment error.
 - [ ] System verbose mechanism.
 - [ ] Simplify logging function ternar.
 - [x] Link "remove_segment" and "predict_new_segment" mechanism's.

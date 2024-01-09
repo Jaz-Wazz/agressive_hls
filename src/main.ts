@@ -41,7 +41,8 @@ class Segment
 		}
 		else
 		{
-			console.log("Segment error:", this.url.split('/').pop(), error);
+			console.log("Segment error, retry:", this.url.split('/').pop(), error);
+			setTimeout(() => this.retry(), 5000);
 		}
 	}
 
