@@ -35,20 +35,13 @@ class Segment
 
 	public on_error(error: any): void
 	{
-		if(error.type == "abort")
-		{
-			console.log("Segment abort:", this.url.split('/').pop());
-		}
-		else
-		{
-			console.log("Segment error, retry:", this.url.split('/').pop(), error);
-			setTimeout(() => this.retry(), 5000);
-		}
+		console.log("Segment error, retry:", this.url.split('/').pop(), error);
+		setTimeout(() => this.retry(), 5000);
 	}
 
 	public abort(): void
 	{
-		this.xhr.onabort = this.xhr.onerror;
+		this.xhr.onabort = () => console.log("Segment abort:", this.url.split('/').pop());
 		this.xhr.abort();
 	}
 
