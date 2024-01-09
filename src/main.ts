@@ -127,7 +127,7 @@ class Buffer
 		else
 		{
 			segment.requested = true;
-			segment.xhr.onload = (event) =>
+			segment.xhr.onload = () =>
 			{
 				if(segment == undefined) throw new Error("undefined_segment");
 				if(this.playlist == null) throw new Error("Playlist information not provided.");
