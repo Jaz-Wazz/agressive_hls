@@ -75,27 +75,27 @@ class Buffer
 
 		let content = "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
 
-		this.segments.forEach((value, key) =>
+		for(let [index, segment] of this.segments)
 		{
-			let speed_relative_average_speed = (value.speed / average_speed);
+			let speed_relative_average_speed = (segment.speed / average_speed);
 			let status_by_sras = "wait";
 
-			if((new Date().getTime()) > value.start_point + 8000)
+			if((new Date().getTime()) > segment.start_point + 8000)
 			{
 				status_by_sras = (speed_relative_average_speed > 0.5) ? "good" : "bad";
 			}
 
-			content += key.toString().padStart(7);
-			content += this.format(value.speed).padStart(13);
+			content += index.toString().padStart(7);
+			content += this.format(segment.speed).padStart(13);
 			content += speed_relative_average_speed.toFixed(2).toString().padStart(6);
 			content += status_by_sras.padStart(7);
-			content += value.requested.toString().padStart(11);
-			content += value.loaded.toString().padStart(8);
-			content += (Math.round(value.progress * 100).toString() + "%").padStart(10);
+			content += segment.requested.toString().padStart(11);
+			content += segment.loaded.toString().padStart(8);
+			content += (Math.round(segment.progress * 100).toString() + "%").padStart(10);
 			content += "\n";
 
-			if(status_by_sras == "bad" && value.loaded == false) value.retry(); // Not call this for downloaded segements.
-		});
+			if(status_by_sras == "bad" && segment.loaded == false) segment.retry(); // Not call this for downloaded segements.
+		}
 
 		content += `Average speed: ${this.format(average_speed)}.\n`;
 		content += `Total speed: ${this.format(total_speed)}.\n`;
