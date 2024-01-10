@@ -233,6 +233,6 @@ window.onload = () =>
 		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
 	});
 
-	hls.loadSource('http://ia601203.s3dns.us.archive.org/4ffe6664/playlist/index-dvr.m3u8');
+	hls.loadSource('http://ia600504.s3dns.us.archive.org/8491726c/index-muted-YW6R9EC0D7.m3u8');
 	hls.attachMedia(player);
 };
