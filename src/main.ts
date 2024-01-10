@@ -46,13 +46,13 @@ class Segment
 
 	public on_error(error: any): void
 	{
-		console.log("Segment error, retry:", this.url.split('/').pop(), error);
+		console.warn("Segment error, retry:", this.url.split('/').pop(), error);
 		setTimeout(() => this.retry(), 5000);
 	}
 
 	public abort(): void
 	{
-		this.xhr.onabort = () => console.log("Segment abort:", this.url.split('/').pop());
+		this.xhr.onabort = () => console.info("Segment abort:", this.url.split('/').pop());
 		this.xhr.abort();
 	}
 
@@ -89,7 +89,7 @@ class Buffer
 
 	public constructor(config: {connection_count: number} = {connection_count: 6})
 	{
-		console.log("[Buffer::constructor]");
+		console.info("Buffer initialized with config:", config);
 		this.connection_count = config.connection_count;
 	}
 
@@ -123,10 +123,10 @@ class Buffer
 
 	public subscribe(index: number, callback: (buffer: ArrayBuffer) => void): void
 	{
-		console.log("[Buffer::subscribe] - Run: ", index);
+		console.group("Subscribe:", index);
 		if(this.playlist == null) throw new Error("Playlist information not provided.");
 
-		console.log("[Buffer::subscribe] - First state: ", this.segments);
+		console.info("First state: ", ...this.segments.keys());
 
 		for(let [i, segment] of this.segments)
 		{
@@ -138,7 +138,7 @@ class Buffer
 			if(!this.segments.has(i)) this.segments.set(i, new Segment(this, this.playlist[i].url));
 		}
 
-		console.log("[Buffer::subscribe] - Second state: ", this.segments);
+		console.info("Second state:", ...this.segments.keys());
 
 		let segment = this.segments.get(index);
 		if(segment == undefined) throw new Error(`Undefined access to ${index} segment.`);
@@ -146,25 +146,26 @@ class Buffer
 		if(segment.loaded)
 		{
 			callback(segment.copy_response());
-			console.log("[Buffer::subscribe] - Fast callback: ", index, segment.xhr.response);
+			console.info("Call callback immediately, with", segment.xhr.response.byteLength, "bytes.");
 		}
 		else
 		{
 			segment.requested = true;
-			console.log("[Buffer::subscribe] - Long callback: ", index);
+			console.info("Registered onload callback.");
 			segment.xhr.onload = () =>
 			{
 				if(segment == undefined) throw new Error("undefined_segment");
-				console.log("[Buffer::subscribe] - Long callback triggered: ", index, segment.xhr.response);
+				console.info("Callback triggered for", index, "segment, with", segment.xhr.response.byteLength, "bytes.");
 				segment.loaded = true;
 				callback(segment.copy_response());
 			};
 		}
+		console.groupEnd();
 	}
 
 	public make_loader(): FragmentLoaderConstructor
 	{
-		console.log("[Buffer::make_loader]");
+		console.info("Buffer make loader class.");
 		let buffer = this;
 		class LoaderWrapper extends CustomLoader { constructor(config: HlsConfig) { super(config, buffer); } };
 		return LoaderWrapper;
@@ -177,25 +178,22 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 
 	public constructor(config: HlsConfig, buffer: Buffer)
 	{
-		console.log("[Loader::constructor]", config, buffer);
 		super(config);
 		this.buffer = buffer;
 	}
 
 	public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 	{
-		console.log("[Loader::load]", context.frag.sn);
 		if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
 		this.buffer.subscribe(context.frag.sn, (buffer) =>
 		{
-			console.log("[Loader::callback]", context.frag.sn, buffer);
 			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
 		});
 	}
 
 	public abort(): void
 	{
-		console.log("[Loader::abort]");
+		console.info("Loader abort triggered, ignorred.");
 	}
 }
 
