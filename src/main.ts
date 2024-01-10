@@ -144,9 +144,7 @@ class Buffer
 			segment.xhr.onload = () =>
 			{
 				if(segment == undefined) throw new Error("undefined_segment");
-				if(this.playlist == null) throw new Error("Playlist information not provided.");
 				console.log("[Buffer::subscribe] - Long callback triggered: ", index, segment.xhr.response);
-
 				segment.loaded = true;
 				callback(segment.xhr.response);
 			};
