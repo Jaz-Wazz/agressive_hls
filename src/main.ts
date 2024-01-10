@@ -119,21 +119,12 @@ class Buffer
 
 		for(let [i, segment] of this.segments)
 		{
-			if(i < index || i >= index + this.connection_count)
-			{
-				segment.abort();
-				this.segments.delete(i);
-				console.log("[Buffer::subscribe] - Remove: ", i);
-			}
+			if(i < index || i >= index + this.connection_count) { segment.abort(); this.segments.delete(i); }
 		}
 
 		for(let i = index; i < index + this.connection_count && i < this.playlist.length; i++)
 		{
-			if(!this.segments.has(i))
-			{
-				this.segments.set(i, new Segment(this, this.playlist[i].url));
-				console.log("[Buffer::subscribe] - Add: ", i);
-			}
+			if(!this.segments.has(i)) this.segments.set(i, new Segment(this, this.playlist[i].url));
 		}
 
 		console.log("[Buffer::subscribe] - Second state: ", this.segments);
