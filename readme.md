@@ -12,3 +12,7 @@
 - [ ] Fix last "Loaded" stats not update on all segments loaded.
 - [ ] Statistics overlay.
 - [ ] Seek thumbnails.
+- [ ] Low speed warning user callback.
+- [ ] Dynamic arraybuffer checks.
+- [ ] Remove or simplify verbose logs.
+- [ ] Multi-servers load balance.
