@@ -65,6 +65,13 @@ class Segment
 		this.start_point = new Date().getTime();
 		this.xhr.send();
 	}
+
+	public copy_response(): ArrayBuffer
+	{
+		let dst = new ArrayBuffer(this.xhr.response.byteLength);
+		new Uint8Array(dst).set(new Uint8Array(this.xhr.response));
+		return dst;
+	}
 }
 
 class Buffer
@@ -134,7 +141,7 @@ class Buffer
 
 		if(segment.loaded)
 		{
-			callback(segment.xhr.response);
+			callback(segment.copy_response());
 			console.log("[Buffer::subscribe] - Fast callback: ", index, segment.xhr.response);
 		}
 		else
@@ -146,7 +153,7 @@ class Buffer
 				if(segment == undefined) throw new Error("undefined_segment");
 				console.log("[Buffer::subscribe] - Long callback triggered: ", index, segment.xhr.response);
 				segment.loaded = true;
-				callback(segment.xhr.response);
+				callback(segment.copy_response());
 			};
 		}
 	}
@@ -177,10 +184,8 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 		if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
 		this.buffer.subscribe(context.frag.sn, (buffer) =>
 		{
-			let buff = new ArrayBuffer(buffer.byteLength);
-			new Uint8Array(buff).set(new Uint8Array(buffer));
-			console.log("[Loader::callback]", context.frag.sn, buff);
-			callbacks.onSuccess({url: context.url, data: buff}, this.stats, context, null);
+			console.log("[Loader::callback]", context.frag.sn, buffer);
+			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
 		});
 	}
 
