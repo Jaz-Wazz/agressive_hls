@@ -68,6 +68,10 @@ class Segment
 
 	public copy_response(): ArrayBuffer
 	{
+		if(!this.loaded)						throw new Error("Segment copy unloaded buffer.");
+		if(this.xhr.readyState != 4)			throw new Error("Segment copy unready buffer.");
+		if(this.xhr.response.byteLength == 0)	throw new Error("Segment copy 0 length buffer.");
+
 		let dst = new ArrayBuffer(this.xhr.response.byteLength);
 		new Uint8Array(dst).set(new Uint8Array(this.xhr.response));
 		return dst;
