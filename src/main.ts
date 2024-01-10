@@ -158,14 +158,6 @@ class Buffer
 
 				segment.loaded = true;
 				callback(segment.xhr.response);
-
-				console.log("[Buffer::subscribe] - End remove: ", index);
-				this.segments.delete(index);
-
-				let next_index = Math.max(... this.segments.keys()) + 1;
-				console.log("[Buffer::subscribe] - End add: ", next_index);
-				if(next_index < this.playlist.length) this.segments.set(next_index, new Segment(this, this.playlist[next_index].url));
-				this.on_progress();
 			};
 		}
 	}
@@ -196,8 +188,10 @@ class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderCont
 		if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
 		this.buffer.subscribe(context.frag.sn, (buffer) =>
 		{
-			console.log("[Loader::callback]", context.frag.sn, buffer);
-			callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
+			let buff = new ArrayBuffer(buffer.byteLength);
+			new Uint8Array(buff).set(new Uint8Array(buffer));
+			console.log("[Loader::callback]", context.frag.sn, buff);
+			callbacks.onSuccess({url: context.url, data: buff}, this.stats, context, null);
 		});
 	}
 
