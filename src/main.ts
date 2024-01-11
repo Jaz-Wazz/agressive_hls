@@ -83,7 +83,7 @@ class Buffer
 	private	segments: Map<number, Segment> = new Map();
 	private connection_count: number = 0;
 	public playlist: Fragment[] | null = null;
-	public on_log: ((content: string) => void) | null = null;
+	public on_stats_update: ((content: string) => void) | null = null;
 	public speed_total: number = 0;
 	public speed_avg: number = 0;
 
@@ -98,7 +98,7 @@ class Buffer
 		this.speed_total	= [...this.segments.values()].reduce((acc, val) => acc + val.speed, 0);
 		this.speed_avg		= this.speed_total / this.segments.size;
 
-		if(this.on_log != null)
+		if(this.on_stats_update != null)
 		{
 			let format	= (size: number) => (size / 131072).toFixed(2) + " mbit/s";
 			let content	= "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
@@ -117,7 +117,7 @@ class Buffer
 
 			content += `Average speed: ${format(this.speed_avg)}.\n`;
 			content += `Total speed: ${format(this.speed_total)}.\n`;
-			this.on_log(content);
+			this.on_stats_update(content);
 		}
 	}
 
@@ -216,7 +216,7 @@ window.onload = () =>
 		if(window.location.hash != time) window.location.hash = time;
 	};
 
-	buffer.on_log = (content) => text_area.textContent = content;
+	buffer.on_stats_update = (content) => text_area.textContent = content;
 	hls.on(Hls.Events.LEVEL_LOADED, (event, data) =>
 	{
 		buffer.playlist = data.details.fragments;
