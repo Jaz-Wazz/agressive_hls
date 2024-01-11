@@ -5,7 +5,6 @@
 - [ ] Custom player controls for fix other issues.
 - [ ] Make buffer customiziable with many sub-system's.
 - [ ] Review statistics / logs information.
-- [ ] Fix last "Loaded" stats not update on all segments loaded.
 - [ ] Custom player statistics overlay.
 - [ ] Seek thumbnails.
 - [ ] Low speed warning user callback.

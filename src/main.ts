@@ -20,7 +20,7 @@ class Segment
 
 		this.xhr.open("GET", url);
 		this.xhr.responseType = "arraybuffer";
-		this.xhr.onload = () => { this.loaded = true; };
+		this.xhr.onload = () => { this.loaded = true; buffer.on_progress(); };
 		this.xhr.onerror = error => this.on_error(error);
 		this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
 		this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
