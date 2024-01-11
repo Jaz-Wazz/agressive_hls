@@ -11,7 +11,7 @@ export namespace AgressiveHls
 	export class Segment
 	{
 		private buffer: Buffer;
-		private start_point: number = new Date().getTime();
+		private start_point: number = 0;
 		private url: string;
 		public xhr: XMLHttpRequest = new XMLHttpRequest();
 		public speed: number = 0;
@@ -39,17 +39,21 @@ export namespace AgressiveHls
 
 		public on_progress(event: ProgressEvent<EventTarget>): void
 		{
-			let elapsed_time = new Date().getTime() - this.start_point;
-			let multiplier = 1000 / elapsed_time;
-			this.speed = event.loaded * multiplier;
-			this.progress = event.loaded / event.total;
-
-			if(elapsed_time > 8000)
+			if(this.start_point != 0)
 			{
-				this.speed_rel_avg		= this.speed / this.buffer.speed_avg;
-				this.speed_rel_avg_stat	= this.speed_rel_avg > 0.5 ? "good" : "bad";
-				if(this.speed_rel_avg < 0.5 && !this.loaded && this.buffer.retry_slow_connections) this.retry();
+				let elapsed_time = new Date().getTime() - this.start_point;
+				let multiplier = 1000 / elapsed_time;
+				this.speed = event.loaded * multiplier;
+				this.progress = event.loaded / event.total;
+
+				if(elapsed_time > 8000)
+				{
+					this.speed_rel_avg		= this.speed / this.buffer.speed_avg;
+					this.speed_rel_avg_stat	= this.speed_rel_avg > 0.5 ? "good" : "bad";
+					if(this.speed_rel_avg < 0.5 && !this.loaded && this.buffer.retry_slow_connections) this.retry();
+				}
 			}
+			else { this.start_point = new Date().getTime(); }
 		}
 
 		public on_error(error: any): void
@@ -68,9 +72,8 @@ export namespace AgressiveHls
 		{
 			this.xhr.abort();
 			this.xhr.open("GET", this.url);
-			this.speed = this.progress = this.speed_rel_avg = 0;
+			this.speed = this.progress = this.speed_rel_avg = this.start_point = 0;
 			this.speed_rel_avg_stat = "wait";
-			this.start_point = new Date().getTime();
 			this.xhr.send();
 		}
 
@@ -105,8 +108,9 @@ export namespace AgressiveHls
 
 		public on_progress(): void
 		{
-			this.speed_total	= [...this.segments.values()].reduce((acc, val) => acc + val.speed, 0);
-			this.speed_avg		= this.speed_total / this.segments.size;
+			let runned			= [...this.segments.values()].filter(val => val.speed != 0);
+			this.speed_total	= runned.reduce((acc, val) => acc + val.speed, 0);
+			this.speed_avg		= this.speed_total / runned.length;
 
 			if(this.on_stats_update != null)
 			{
