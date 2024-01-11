@@ -2,6 +2,12 @@ import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsCon
 
 export namespace AgressiveHls
 {
+	export interface Config
+	{
+		connection_count?: number;
+		retry_slow_connections?: boolean;
+	};
+
 	export class Segment
 	{
 		private buffer: Buffer;
@@ -42,7 +48,7 @@ export namespace AgressiveHls
 			{
 				this.speed_rel_avg		= this.speed / this.buffer.speed_avg;
 				this.speed_rel_avg_stat	= this.speed_rel_avg > 0.5 ? "good" : "bad";
-				if(this.speed_rel_avg < 0.5 && !this.loaded) this.retry();
+				if(this.speed_rel_avg < 0.5 && !this.loaded && this.buffer.retry_slow_connections) this.retry();
 			}
 		}
 
@@ -83,16 +89,18 @@ export namespace AgressiveHls
 	export class Buffer
 	{
 		private	segments: Map<number, Segment> = new Map();
-		private connection_count: number = 0;
+		private connection_count: number;
+		public retry_slow_connections: boolean;
 		public playlist: Fragment[] | null = null;
 		public on_stats_update: ((content: string) => void) | null = null;
 		public speed_total: number = 0;
 		public speed_avg: number = 0;
 
-		public constructor(config: {connection_count: number} = {connection_count: 6})
+		public constructor(config: Config = {connection_count: 6, retry_slow_connections: true})
 		{
 			console.info("Buffer initialized with config:", config);
-			this.connection_count = config.connection_count;
+			this.connection_count		= config.connection_count ?? 6;
+			this.retry_slow_connections	= config.retry_slow_connections ?? true;
 		}
 
 		public on_progress(): void
