@@ -9,3 +9,4 @@
 - [ ] Low speed warning user callback.
 - [ ] Add many dynamic checks.
 - [ ] Multi-servers load balance.
+- [ ] Fix browser supressed requests triggered retry by speed system.
