@@ -4,15 +4,10 @@
 - [ ] Segment progress event and display.
 - [ ] Custom player controls for fix other issues.
 - [ ] Make buffer customiziable with many sub-system's.
-- [x] Stabilize behavior on segment error.
-- [ ] System verbose mechanism.
-- [x] Simplify logging function.
-- [x] Link "remove_segment" and "predict_new_segment" mechanism's.
 - [ ] Review statistics / logs information.
 - [ ] Fix last "Loaded" stats not update on all segments loaded.
-- [ ] Statistics overlay.
+- [ ] Custom player statistics overlay.
 - [ ] Seek thumbnails.
 - [ ] Low speed warning user callback.
-- [ ] Dynamic arraybuffer checks.
-- [ ] Remove or simplify verbose logs.
+- [ ] Add many dynamic checks.
 - [ ] Multi-servers load balance.
