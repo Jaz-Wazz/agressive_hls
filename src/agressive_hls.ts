@@ -78,7 +78,7 @@ export namespace AgressiveHls
 			new Uint8Array(dst).set(new Uint8Array(this.xhr.response));
 			return dst;
 		}
-	}
+	};
 
 	export class Buffer
 	{
@@ -197,5 +197,5 @@ export namespace AgressiveHls
 		{
 			console.info("Loader abort triggered, ignorred.");
 		}
-	}
+	};
 }
