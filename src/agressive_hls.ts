@@ -152,6 +152,7 @@ export namespace AgressiveHls
 				if(!this.segments.has(i)) this.segments.set(i, new Segment(this, this.playlist[i].url));
 			}
 
+			if(this.segments.size != this.connection_count) this.on_progress();
 			console.info("Second state:", ...this.segments.keys());
 
 			let segment = this.segments.get(index);
