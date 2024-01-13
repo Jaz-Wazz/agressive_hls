@@ -27,6 +27,6 @@ window.onload = () =>
 		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
 	});
 
-	hls.loadSource('http://ia600504.s3dns.us.archive.org/8491726c/index-muted-YW6R9EC0D7.m3u8');
+	hls.loadSource('http://ia601703.s3dns.us.archive.org/76b6526e/index-muted-Y4POEUXVTL.m3u8');
 	hls.attachMedia(player);
 };
