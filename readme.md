@@ -1,0 +1,12 @@
+##### To do.
+- [ ] Support segments from browser cache.
+- [ ] Segment progress event and display.
+- [ ] Custom player controls for fix other issues.
+- [ ] Make buffer customiziable with many sub-system's.
+- [ ] Review statistics / logs information.
+- [ ] Custom player statistics overlay.
+- [ ] Seek thumbnails.
+- [ ] Low speed warning user callback.
+- [ ] Add many dynamic checks.
+- [ ] Multi-servers load balance.
+- [ ] Fix browser supressed requests triggered retry by speed system.
