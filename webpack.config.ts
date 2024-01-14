@@ -55,8 +55,7 @@ const config: webpack.Configuration =
 		new CopyPlugin({patterns:
 		[
 			{from: "./examples/browser_player/main.html", to: "browser_player/main.html"},
-			{from: "./examples/browser_player/main.css", to: "browser_player/main.css"},
-			{from: "./node_modules/plyr/dist/plyr.css", to: "browser_player/plyr.css"},
+			{from: "./examples/browser_player/main.css", to: "browser_player/main.css"}
 		]})
 	]
 };
