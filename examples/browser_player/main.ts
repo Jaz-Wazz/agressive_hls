@@ -3,19 +3,14 @@ import { AgressiveHls } from "agressive_hls";
 
 window.onload = () =>
 {
-	let player = document.getElementById("player");
-	if(!(player instanceof HTMLVideoElement)) throw new Error("Not find #player.");
-
-	let text_area = document.createElement("textarea");
-	text_area.spellcheck = false;
-	document.body.append(text_area);
+	let player		= document.getElementsByTagName("video")[0];
+	let text_area	= document.getElementsByTagName("textarea")[0];
 
 	let buffer	= new AgressiveHls.Buffer;
 	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
 	player.ontimeupdate = () =>
 	{
-		if(!(player instanceof HTMLVideoElement)) throw new Error("Not find #player.");
 		let time = Math.round(player.currentTime).toString();
 		if(window.location.hash != time) window.location.hash = time;
 	};
