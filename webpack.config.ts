@@ -45,7 +45,8 @@ const config: webpack.Configuration =
 		},
 		devMiddleware:
 		{
-			writeToDisk: true
+			writeToDisk: true,
+			index: "main.html"
 		}
 	},
 	plugins:
