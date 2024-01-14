@@ -6,11 +6,15 @@ import path from "path";
 const config: webpack.Configuration =
 {
 	mode: "development",
-	entry: "./src/main.ts",
+	entry:
+	{
+		"browser_player": "./examples/browser_player/main.ts"
+	},
 	devtool: 'source-map',
 	output:
 	{
 		path: path.resolve(__dirname, "./build"),
+		filename: "[name]/main.js",
 		clean: true
 	},
 	module:
@@ -46,7 +50,12 @@ const config: webpack.Configuration =
 	},
 	plugins:
 	[
-		new CopyPlugin({patterns: ["./src/main.html", "./src/main.css", "./node_modules/plyr/dist/plyr.css"]})
+		new CopyPlugin({patterns:
+		[
+			{from: "./examples/browser_player/main.html", to: "browser_player/main.html"},
+			{from: "./examples/browser_player/main.css", to: "browser_player/main.css"},
+			{from: "./node_modules/plyr/dist/plyr.css", to: "browser_player/plyr.css"},
+		]})
 	]
 };
 

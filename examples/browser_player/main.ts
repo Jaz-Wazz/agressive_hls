@@ -1,5 +1,5 @@
 import Hls from "hls.js";
-import { AgressiveHls } from "./agressive_hls";
+import { AgressiveHls } from "../../src/agressive_hls";
 
 window.onload = () =>
 {
