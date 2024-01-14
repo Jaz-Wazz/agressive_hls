@@ -16,13 +16,6 @@ body
 	font-family: "Consolas";
 }
 
-video
-{
-	background-color: #202225;
-	height: 500px;
-	aspect-ratio: 16/9;
-}
-
 textarea
 {
 	position: absolute;
@@ -34,4 +27,15 @@ textarea
 	padding: 5px;
 	color: rgb(227, 227, 227);
 	resize: none;
+}
+
+.control_panel
+{
+	background-color: #202225;
+	padding: 5px;
+}
+
+.control_panel > *
+{
+	padding: 5px;
 }
