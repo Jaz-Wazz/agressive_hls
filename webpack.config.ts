@@ -6,11 +6,16 @@ import path from "path";
 const config: webpack.Configuration =
 {
 	mode: "development",
-	entry: "./src/main.ts",
+	entry:
+	{
+		"browser_player": "./examples/browser_player/main.ts",
+		"buffer_playground": "./examples/buffer_playground/main.ts"
+	},
 	devtool: 'source-map',
 	output:
 	{
 		path: path.resolve(__dirname, "./build"),
+		filename: "[name]/main.js",
 		clean: true
 	},
 	module:
@@ -26,7 +31,8 @@ const config: webpack.Configuration =
 	},
 	resolve:
 	{
-		extensions: [".ts", ".tsx", ".js"]
+		extensions: [".ts", ".tsx", ".js"],
+		alias: { agressive_hls: path.resolve(__dirname, "./src/agressive_hls") }
 	},
 	devServer:
 	{
@@ -41,12 +47,19 @@ const config: webpack.Configuration =
 		},
 		devMiddleware:
 		{
-			writeToDisk: true
+			writeToDisk: true,
+			index: "main.html"
 		}
 	},
 	plugins:
 	[
-		new CopyPlugin({patterns: ["./src/main.html", "./src/main.css", "./node_modules/plyr/dist/plyr.css"]})
+		new CopyPlugin({patterns:
+		[
+			{from: "./examples/browser_player/main.html", to: "browser_player/main.html"},
+			{from: "./examples/browser_player/main.css", to: "browser_player/main.css"},
+			{from: "./examples/buffer_playground/main.html", to: "buffer_playground/main.html"},
+			{from: "./examples/buffer_playground/main.css", to: "buffer_playground/main.css"}
+		]})
 	]
 };
 
