@@ -1,0 +1,37 @@
+*
+{
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body
+{
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #2F3136;
+	font-family: "Consolas";
+}
+
+video
+{
+	background-color: #202225;
+	height: 500px;
+	aspect-ratio: 16/9;
+}
+
+textarea
+{
+	position: absolute;
+	width: 442px;
+	height: 160px;
+	top: 5px;
+	left: 5px;
+	background-color: rgba(0, 0, 0, 0.5);
+	padding: 5px;
+	color: rgb(227, 227, 227);
+	resize: none;
+}

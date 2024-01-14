@@ -8,7 +8,8 @@ const config: webpack.Configuration =
 	mode: "development",
 	entry:
 	{
-		"browser_player": "./examples/browser_player/main.ts"
+		"browser_player": "./examples/browser_player/main.ts",
+		"buffer_playground": "./examples/buffer_playground/main.ts"
 	},
 	devtool: 'source-map',
 	output:
@@ -55,7 +56,9 @@ const config: webpack.Configuration =
 		new CopyPlugin({patterns:
 		[
 			{from: "./examples/browser_player/main.html", to: "browser_player/main.html"},
-			{from: "./examples/browser_player/main.css", to: "browser_player/main.css"}
+			{from: "./examples/browser_player/main.css", to: "browser_player/main.css"},
+			{from: "./examples/buffer_playground/main.html", to: "buffer_playground/main.html"},
+			{from: "./examples/buffer_playground/main.css", to: "buffer_playground/main.css"}
 		]})
 	]
 };
