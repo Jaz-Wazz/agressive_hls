@@ -30,7 +30,8 @@ const config: webpack.Configuration =
 	},
 	resolve:
 	{
-		extensions: [".ts", ".tsx", ".js"]
+		extensions: [".ts", ".tsx", ".js"],
+		alias: { agressive_hls: path.resolve(__dirname, "./src/agressive_hls") }
 	},
 	devServer:
 	{
