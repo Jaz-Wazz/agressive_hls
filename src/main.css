@@ -7,8 +7,6 @@
 
 body
 {
-	margin: 0;
-	padding: 0;
 	height: 100vh;
 	width: 100vw;
 	display: flex;
@@ -18,7 +16,7 @@ body
 	font-family: "Consolas";
 }
 
-body > #player, body > .plyr
+#player
 {
 	background-color: #202225;
 	height: 500px;
@@ -36,12 +34,4 @@ textarea
 	padding: 5px;
 	color: rgb(227, 227, 227);
 	resize: none;
-}
-
-.plyr__control > img
-{
-	filter: invert(100%);
-	width: 18px;
-	height: 18px;
-	display: block;
 }
