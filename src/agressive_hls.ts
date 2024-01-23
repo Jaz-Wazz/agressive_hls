@@ -72,6 +72,9 @@ export namespace AgressiveHls
 		{
 			this.xhr.abort();
 			this.xhr.open("GET", this.url);
+			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+			this.xhr.setRequestHeader("Pragma", "no-cache");
 			this.speed = this.progress = this.speed_rel_avg = this.start_point = 0;
 			this.speed_rel_avg_stat = "wait";
 			this.xhr.send();
