@@ -12,7 +12,7 @@ window.onload = () =>
 	player.ontimeupdate = () =>
 	{
 		let time = Math.round(player.currentTime).toString();
-		if(window.location.hash != time) window.location.hash = time;
+		if(window.location.hash != time) window.location.replace(`#${time}`);
 	};
 
 	buffer.on_stats_update = (content) => text_area.textContent = content;
@@ -22,6 +22,6 @@ window.onload = () =>
 		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
 	});
 
-	hls.loadSource('http://ia801700.s3dns.us.archive.org/04c5d9d9/index-muted-4TQQ5ZAKD0.m3u8');
+	hls.loadSource('http://ia601309.s3dns.us.archive.org/3f2bce09/playlist/index-muted-TJCRE8F3EL.m3u8');
 	hls.attachMedia(player);
 };
