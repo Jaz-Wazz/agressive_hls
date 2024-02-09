@@ -11,9 +11,10 @@ let opts =
 		"examples/buffer_playground/main.css",
 		"examples/buffer_playground/main.ts"
 	],
-	outdir: "build",
 	bundle: true,
+	minify: true,
 	sourcemap: true,
+	outdir: "build",
 	loader: {".html": "copy"}
 };
 
