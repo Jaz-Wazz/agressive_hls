@@ -29,7 +29,7 @@ if(process.argv[2] == "--server")
 	await ctx.serve({servedir: "build", port: 8080});
 }
 
-if(process.argv[2] == "--prepare")
+if(process.argv[2] == "--prepare" && process.env.INIT_CWD != process.cwd())
 {
 	await esbuild.build({entryPoints: ["src/agressive_hls.ts"], minify: true, outdir: "build"});
 }
