@@ -2,10 +2,19 @@ import * as esbuild from "esbuild";
 
 let opts =
 {
-	entryPoints: ["examples/browser_player/main.ts", "examples/buffer_playground/main.ts"],
+	entryPoints:
+	[
+		"examples/browser_player/main.html",
+		"examples/browser_player/main.css",
+		"examples/browser_player/main.ts",
+		"examples/buffer_playground/main.html",
+		"examples/buffer_playground/main.css",
+		"examples/buffer_playground/main.ts"
+	],
 	outdir: "build",
 	bundle: true,
-	sourcemap: true
+	sourcemap: true,
+	loader: {".html": "copy"}
 };
 
 if(process.argv[2] == "--build")
