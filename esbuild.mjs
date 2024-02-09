@@ -26,5 +26,5 @@ if(process.argv[2] == "--build")
 if(process.argv[2] == "--server")
 {
 	let ctx = await esbuild.context(opts);
-	await ctx.serve({servedir: "build"});
+	await ctx.serve({servedir: "build", port: 8080});
 }
