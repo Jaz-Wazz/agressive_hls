@@ -8,6 +8,7 @@
 		"server": "node esbuild.mjs --server",
 		"prepare": "node esbuild.mjs --prepare"
 	},
+	"main": "build/agressive_hls.js",
 	"author": "Jaz-Wazz",
 	"license": "MIT",
 	"devDependencies": {"esbuild": "^0.20.0"},
