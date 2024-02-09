@@ -5,7 +5,8 @@
 	"scripts":
 	{
 		"build": "node esbuild.mjs --build",
-		"server": "node esbuild.mjs --server"
+		"server": "node esbuild.mjs --server",
+		"prepare": "node esbuild.mjs --prepare"
 	},
 	"author": "Jaz-Wazz",
 	"license": "MIT",

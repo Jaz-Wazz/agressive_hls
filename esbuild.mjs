@@ -28,3 +28,8 @@ if(process.argv[2] == "--server")
 	let ctx = await esbuild.context(opts);
 	await ctx.serve({servedir: "build", port: 8080});
 }
+
+if(process.argv[2] == "--prepare")
+{
+	await esbuild.build({entryPoints: ["src/agressive_hls.ts"], minify: true, outdir: "build"});
+}
