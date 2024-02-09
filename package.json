@@ -9,12 +9,6 @@
 	},
 	"author": "Jaz-Wazz",
 	"license": "MIT",
-	"devDependencies":
-	{
-		"esbuild": "^0.20.0"
-	},
-	"dependencies":
-	{
-		"hls.js": "^1.4.12"
-	}
+	"devDependencies": {"esbuild": "^0.20.0"},
+	"dependencies": {"hls.js": "^1.4.12"}
 }
