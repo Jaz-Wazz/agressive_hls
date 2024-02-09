@@ -1,6 +1,6 @@
 import * as esbuild from "esbuild";
 
-let opts =
+const opts =
 {
 	entryPoints:
 	[
