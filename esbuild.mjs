@@ -6,7 +6,7 @@ const configurations =
 {
 	"library":
 	{
-		entryPoints: ["src/agressive_hls.ts", "src/agressive_hls.d.ts"],
+		entryPoints: ["src/main.ts", "src/main.d.ts"],
 		minify: true,
 		outdir: "build",
 		loader: {".d.ts": "copy"},

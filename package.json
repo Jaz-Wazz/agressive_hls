@@ -9,8 +9,8 @@
 		"server":			"node esbuild.mjs --server",
 		"prepare":			"node esbuild.mjs --build-library --only-as-dependency"
 	},
-	"main": "build/agressive_hls.js",
-	"types": "build/agressive_hls.d.ts",
+	"main": "build/main.js",
+	"types": "build/main.d.ts",
 	"author": "Jaz-Wazz",
 	"license": "MIT",
 	"devDependencies": {"esbuild": "^0.20.0"},
