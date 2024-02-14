@@ -31,5 +31,11 @@ if(process.argv[2] == "--server")
 
 if(process.argv[2] == "--prepare" && process.env.INIT_CWD != process.cwd())
 {
-	await esbuild.build({entryPoints: ["src/agressive_hls.ts"], minify: true, outdir: "build"});
+	await esbuild.build(
+	{
+		entryPoints: ["src/agressive_hls.ts", "src/agressive_hls.d.ts"],
+		minify: true,
+		outdir: "build",
+		loader: {".d.ts": "copy"}
+	});
 }
