@@ -55,4 +55,6 @@ export declare namespace AgressiveHls
 		public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>): void;
 		public abort(): void;
 	}
+
+	export {};
 }
