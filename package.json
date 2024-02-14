@@ -4,9 +4,10 @@
 	"description": "Agressive hls loader library.",
 	"scripts":
 	{
-		"build": "node esbuild.mjs --build",
-		"server": "node esbuild.mjs --server",
-		"prepare": "node esbuild.mjs --prepare"
+		"build-library":	"node esbuild.mjs --build-library",
+		"build-examples":	"node esbuild.mjs --build-examples",
+		"server":			"node esbuild.mjs --server",
+		"prepare":			"node esbuild.mjs --build-library --only-as-dependency"
 	},
 	"main": "build/agressive_hls.js",
 	"types": "build/agressive_hls.d.ts",
