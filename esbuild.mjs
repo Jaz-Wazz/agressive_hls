@@ -8,7 +8,8 @@ const configurations =
 		entryPoints: ["src/agressive_hls.ts", "src/agressive_hls.d.ts"],
 		minify: true,
 		outdir: "build",
-		loader: {".d.ts": "copy"}
+		loader: {".d.ts": "copy"},
+		logLevel: "info"
 	},
 	"examples":
 	{
@@ -25,7 +26,8 @@ const configurations =
 		minify: true,
 		sourcemap: true,
 		outdir: "build",
-		loader: {".html": "copy"}
+		loader: {".html": "copy"},
+		logLevel: "info"
 	}
 };
 
