@@ -1,4 +1,14 @@
-import { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
+import
+{
+	Fragment,
+	FragmentLoaderConstructor,
+	FragmentLoaderContext,
+	HlsConfig,
+	Loader,
+	LoaderCallbacks,
+	LoaderConfiguration,
+	LoaderContext
+} from "hls.js";
 
 export declare namespace AgressiveHls
 {
