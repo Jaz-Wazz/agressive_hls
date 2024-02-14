@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
 import * as process from "node:process";
+import * as fs from "node:fs";
 
 const configurations =
 {
@@ -34,18 +35,21 @@ const configurations =
 if(process.argv.includes("--build-library"))
 {
 	if(process.argv.includes("--only-as-dependency")) if(process.env.INIT_CWD != process.cwd()) process.exit();
+	fs.rmSync("build", {recursive: true, force: true});
 	await esbuild.build(configurations.library);
 	process.exit();
 }
 
 if(process.argv.includes("--build-examples"))
 {
+	fs.rmSync("build", {recursive: true, force: true});
 	await esbuild.build(configurations.examples);
 	process.exit();
 }
 
 if(process.argv.includes("--server"))
 {
+	fs.rmSync("build", {recursive: true, force: true});
 	let ctx = await esbuild.context(configurations.examples);
 	await ctx.serve({servedir: "build", port: 8080});
 }
