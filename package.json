@@ -1,14 +1,18 @@
 {
 	"name": "agressive_hls",
-	"version": "0.1.0",
+	"version": "0.0.1",
 	"description": "Agressive hls loader library.",
 	"scripts":
 	{
-		"build": "node esbuild.mjs --build",
-		"server": "node esbuild.mjs --server"
+		"build-library":	"node esbuild.mjs --build-library",
+		"build-examples":	"node esbuild.mjs --build-examples",
+		"server":			"node esbuild.mjs --server",
+		"prepare":			"node esbuild.mjs --build-library --only-as-dependency"
 	},
+	"main": "build/main.js",
+	"types": "build/main.d.ts",
 	"author": "Jaz-Wazz",
 	"license": "MIT",
-	"devDependencies": {"esbuild": "^0.20.0"},
-	"dependencies": {"hls.js": "^1.4.12"}
+	"devDependencies": {"esbuild": "0.20.0"},
+	"peerDependencies": {"hls.js": "1.4.12"}
 }
