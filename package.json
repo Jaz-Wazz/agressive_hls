@@ -13,6 +13,6 @@
 	"types": "build/main.d.ts",
 	"author": "Jaz-Wazz",
 	"license": "MIT",
-	"devDependencies": {"esbuild": "^0.20.0"},
-	"peerDependencies": {"hls.js": "^1.4.12"}
+	"devDependencies": {"esbuild": "0.20.0"},
+	"peerDependencies": {"hls.js": "1.4.12"}
 }
