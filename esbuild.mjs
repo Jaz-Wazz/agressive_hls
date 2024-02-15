@@ -34,7 +34,7 @@ const configurations =
 
 if(process.argv.includes("--build-library"))
 {
-	if(process.argv.includes("--only-as-dependency")) if(process.env.INIT_CWD != process.cwd()) process.exit();
+	if(process.argv.includes("--only-as-dependency")) if(process.env.INIT_CWD == process.cwd()) process.exit();
 	fs.rmSync("build", {recursive: true, force: true});
 	await esbuild.build(configurations.library);
 	process.exit();
