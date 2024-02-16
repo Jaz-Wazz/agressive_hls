@@ -26,7 +26,7 @@ textarea
 	background-color: rgba(0, 0, 0, 0.5);
 	padding: 5px;
 	color: rgb(227, 227, 227);
-	resize: none;
+	white-space: pre;
 }
 
 .control_panel

@@ -28,7 +28,8 @@ const configurations =
 		sourcemap: true,
 		outdir: "build",
 		loader: {".html": "copy"},
-		logLevel: "info"
+		logLevel: "info",
+		target: "chrome78"
 	}
 };
 
