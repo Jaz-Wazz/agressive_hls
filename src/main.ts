@@ -5,7 +5,7 @@ export namespace AgressiveHls
 	export interface Config
 	{
 		connection_count?: number;
-		retry_slow_connections?: boolean;
+		retry_slow_connections?: "off" | "relative" | "fixed";
 		advanced_segment_search?: boolean;
 	};
 
@@ -17,7 +17,7 @@ export namespace AgressiveHls
 		public xhr: XMLHttpRequest = new XMLHttpRequest();
 		public speed: number = 0;
 		public speed_rel_avg: number = 0;
-		public speed_rel_avg_stat: "wait" | "good" | "bad" = "wait";
+		public speed_rel_avg_stat: "wait" | "good" | "bad" | "off";
 		public progress: number = 0;
 		public requested: boolean = false;
 		public loaded: boolean = false;
@@ -27,6 +27,7 @@ export namespace AgressiveHls
 		{
 			this.url = url;
 			this.buffer = buffer;
+			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 
 			this.xhr.open("GET", url);
 			this.xhr.responseType = "arraybuffer";
@@ -59,6 +60,7 @@ export namespace AgressiveHls
 
 			this.buffer.on_progress();
 			this.loaded = true;
+			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "good" : "off";
 			if(this.onload != null) this.onload();
 		}
 
@@ -70,12 +72,20 @@ export namespace AgressiveHls
 				let multiplier = 1000 / elapsed_time;
 				this.speed = event.loaded * multiplier;
 				this.progress = event.loaded / event.total;
+				this.speed_rel_avg = this.speed / this.buffer.speed_avg;
 
-				if(elapsed_time > 8000)
+				if(this.buffer.retry_slow_connections == "fixed" && elapsed_time > 8000 && !this.loaded)
 				{
-					this.speed_rel_avg		= this.speed / this.buffer.speed_avg;
+					let speed_in_mbits = this.speed / 131072;
+					let min_speed = (12 / this.buffer.connection_count) - 0.1;
+					this.speed_rel_avg_stat	= speed_in_mbits > min_speed ? "good" : "bad";
+					if(speed_in_mbits < min_speed) this.retry();
+				}
+
+				if(this.buffer.retry_slow_connections == "relative" && elapsed_time > 8000 && !this.loaded)
+				{
 					this.speed_rel_avg_stat	= this.speed_rel_avg > 0.5 ? "good" : "bad";
-					if(this.speed_rel_avg < 0.5 && !this.loaded && this.buffer.retry_slow_connections) this.retry();
+					if(this.speed_rel_avg < 0.5) this.retry();
 				}
 			}
 			else { this.start_point = new Date().getTime(); }
@@ -101,7 +111,7 @@ export namespace AgressiveHls
 			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
 			this.xhr.setRequestHeader("Pragma", "no-cache");
 			this.speed = this.progress = this.speed_rel_avg = this.start_point = 0;
-			this.speed_rel_avg_stat = "wait";
+			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 			this.xhr.send();
 		}
 
@@ -127,14 +137,14 @@ export namespace AgressiveHls
 
 		// config
 		public connection_count: number;
-		public retry_slow_connections: boolean;
+		public retry_slow_connections: "off" | "relative" | "fixed";
 		public advanced_segment_search: boolean;
 
-		public constructor(config: Config = {connection_count: 6, retry_slow_connections: true})
+		public constructor(config: Config)
 		{
 			console.info("Buffer initialized with config:", config);
 			this.connection_count = config.connection_count ?? 6;
-			this.retry_slow_connections	= config.retry_slow_connections ?? true;
+			this.retry_slow_connections	= config.retry_slow_connections ?? "off";
 			this.advanced_segment_search = config.advanced_segment_search ?? false;
 		}
 
@@ -147,7 +157,7 @@ export namespace AgressiveHls
 			if(this.on_stats_update != null)
 			{
 				let format	= (size: number) => (size / 131072).toFixed(2) + " mbit/s";
-				let content	= "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
+				let content	= "Segment        Speed  SrAS    RSC  Requested  Loaded  Progress\n";
 
 				for(let [index, segment] of this.segments)
 				{

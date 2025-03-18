@@ -17,7 +17,7 @@ export declare namespace AgressiveHls
 	export interface Config
 	{
 		connection_count?: number;
-		retry_slow_connections?: boolean;
+		retry_slow_connections?: "off" | "relative" | "fixed";
 		advanced_segment_search?: boolean;
 	}
 
