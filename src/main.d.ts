@@ -18,13 +18,14 @@ export declare namespace AgressiveHls
 	{
 		connection_count?: number;
 		retry_slow_connections?: boolean;
+		advanced_segment_search?: boolean;
 	}
 
 	export class Segment
 	{
 		private buffer;
 		private start_point;
-		private url;
+		public url;
 		public xhr: XMLHttpRequest;
 		public speed: number;
 		public speed_rel_avg: number;
@@ -32,8 +33,10 @@ export declare namespace AgressiveHls
 		public progress: number;
 		public requested: boolean;
 		public loaded: boolean;
+		public onload: (() => any) | null;
 
 		public constructor(buffer: Buffer, url: string);
+		public on_load();
 		public on_progress(event: ProgressEvent<EventTarget>): void;
 		public on_error(error: any): void;
 		public abort(): void;
@@ -44,12 +47,13 @@ export declare namespace AgressiveHls
 	export class Buffer
 	{
 		private segments;
-		private connection_count;
-		public retry_slow_connections: boolean;
 		public playlist: Fragment[] | null;
 		public on_stats_update: ((content: string) => void) | null;
 		public speed_total: number;
 		public speed_avg: number;
+		public connection_count: number;
+		public retry_slow_connections: boolean;
+		public advanced_segment_search: boolean;
 
 		public constructor(config?: Config);
 		public on_progress(): void;
