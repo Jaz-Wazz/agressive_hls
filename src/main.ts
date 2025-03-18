@@ -6,13 +6,14 @@ export namespace AgressiveHls
 	{
 		connection_count?: number;
 		retry_slow_connections?: boolean;
+		advanced_segment_search?: boolean;
 	};
 
 	export class Segment
 	{
 		private buffer: Buffer;
 		private start_point: number = 0;
-		private url: string;
+		public url: string;
 		public xhr: XMLHttpRequest = new XMLHttpRequest();
 		public speed: number = 0;
 		public speed_rel_avg: number = 0;
@@ -20,6 +21,7 @@ export namespace AgressiveHls
 		public progress: number = 0;
 		public requested: boolean = false;
 		public loaded: boolean = false;
+		public onload: (() => any) | null = null;
 
 		public constructor(buffer: Buffer, url: string)
 		{
@@ -28,13 +30,36 @@ export namespace AgressiveHls
 
 			this.xhr.open("GET", url);
 			this.xhr.responseType = "arraybuffer";
-			this.xhr.onload = () => { this.loaded = true; buffer.on_progress(); };
+			this.xhr.onload = () => { this.on_load(); };
 			this.xhr.onerror = error => this.on_error(error);
 			this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
 			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
 			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
 			this.xhr.setRequestHeader("Pragma", "no-cache");
 			this.xhr.send();
+		}
+
+		public on_load()
+		{
+			if(this.xhr.status == 404 && this.buffer.advanced_segment_search)
+			{
+				if(this.url.endsWith("-muted.ts"))
+				{
+					console.warn(`Segment '${this.url.split('/').pop()}' not found, transform to: 'muted -> ts'.`);
+					this.url = this.url.replace("-muted.ts", ".ts");
+				}
+				else
+				{
+					console.warn(`Segment '${this.url.split('/').pop()}' not found, use transformation: 'ts -> muted'.`);
+					this.url = this.url.replace(".ts", "-muted.ts");
+				}
+				this.retry();
+				return;
+			}
+
+			this.buffer.on_progress();
+			this.loaded = true;
+			if(this.onload != null) this.onload();
 		}
 
 		public on_progress(event: ProgressEvent<EventTarget>): void
@@ -95,18 +120,22 @@ export namespace AgressiveHls
 	export class Buffer
 	{
 		private	segments: Map<number, Segment> = new Map();
-		private connection_count: number;
-		public retry_slow_connections: boolean;
 		public playlist: Fragment[] | null = null;
 		public on_stats_update: ((content: string) => void) | null = null;
 		public speed_total: number = 0;
 		public speed_avg: number = 0;
 
+		// config
+		public connection_count: number;
+		public retry_slow_connections: boolean;
+		public advanced_segment_search: boolean;
+
 		public constructor(config: Config = {connection_count: 6, retry_slow_connections: true})
 		{
 			console.info("Buffer initialized with config:", config);
-			this.connection_count		= config.connection_count ?? 6;
+			this.connection_count = config.connection_count ?? 6;
 			this.retry_slow_connections	= config.retry_slow_connections ?? true;
+			this.advanced_segment_search = config.advanced_segment_search ?? false;
 		}
 
 		public on_progress(): void
@@ -170,7 +199,7 @@ export namespace AgressiveHls
 			{
 				segment.requested = true;
 				console.info("Registered onload callback.");
-				segment.xhr.onload = () =>
+				segment.onload = () =>
 				{
 					if(segment == undefined) throw new Error("undefined_segment");
 					console.info("Callback triggered for", index, "segment, with", segment.xhr.response.byteLength, "bytes.");
