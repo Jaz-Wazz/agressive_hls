@@ -14,6 +14,7 @@ body
 	justify-content: center;
 	background-color: #2F3136;
 	font-family: "Consolas";
+	font-size: 13px;
 }
 
 video
@@ -23,15 +24,16 @@ video
 	aspect-ratio: 16/9;
 }
 
-textarea
+.text_area
 {
 	position: absolute;
-	width: 442px;
-	height: 160px;
 	top: 5px;
 	left: 5px;
 	background-color: rgba(0, 0, 0, 0.5);
 	padding: 5px;
 	color: rgb(227, 227, 227);
 	white-space: pre;
+	user-select: none;
+	padding: 5px;
+	padding-right: 8px;
 }

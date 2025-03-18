@@ -4,9 +4,9 @@ import { AgressiveHls } from "agressive_hls";
 window.onload = () =>
 {
 	let player		= document.getElementsByTagName("video")[0];
-	let text_area	= document.getElementsByTagName("textarea")[0];
+	let text_area	= document.getElementsByClassName("text_area")[0];
 
-	let buffer	= new AgressiveHls.Buffer;
+	let buffer	= new AgressiveHls.Buffer({connection_count: 6});
 	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
 	player.ontimeupdate = () =>
