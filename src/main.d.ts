@@ -20,6 +20,7 @@ export declare namespace AgressiveHls
 		retry_slow_connections?: "off" | "relative" | "fixed";
 		advanced_segment_search?: boolean;
 		override_segment_extension?: string;
+		supress_cache?: boolean;
 	}
 
 	export class Segment
@@ -56,6 +57,7 @@ export declare namespace AgressiveHls
 		public retry_slow_connections: boolean;
 		public advanced_segment_search: boolean;
 		public override_segment_extension: string;
+		public supress_cache: boolean;
 
 		public constructor(config?: Config);
 		public on_progress(): void;

@@ -8,6 +8,7 @@ export namespace AgressiveHls
 		retry_slow_connections?: "off" | "relative" | "fixed";
 		advanced_segment_search?: boolean;
 		override_segment_extension?: string;
+		supress_cache?: boolean;
 	};
 
 	export class Segment
@@ -41,9 +42,14 @@ export namespace AgressiveHls
 			this.xhr.onload = () => { this.on_load(); };
 			this.xhr.onerror = error => this.on_error(error);
 			this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
-			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
-			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
-			this.xhr.setRequestHeader("Pragma", "no-cache");
+
+			if(this.buffer.supress_cache)
+			{
+				this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+				this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+				this.xhr.setRequestHeader("Pragma", "no-cache");
+			}
+
 			this.xhr.send();
 		}
 
@@ -147,6 +153,7 @@ export namespace AgressiveHls
 		public retry_slow_connections: "off" | "relative" | "fixed";
 		public advanced_segment_search: boolean;
 		public override_segment_extension: string;
+		public supress_cache: boolean;
 
 		public constructor(config: Config)
 		{
@@ -155,6 +162,7 @@ export namespace AgressiveHls
 			this.retry_slow_connections	= config.retry_slow_connections ?? "off";
 			this.advanced_segment_search = config.advanced_segment_search ?? false;
 			this.override_segment_extension = config.override_segment_extension ?? "off";
+			this.supress_cache = config.supress_cache ?? "on";
 		}
 
 		public on_progress(): void
