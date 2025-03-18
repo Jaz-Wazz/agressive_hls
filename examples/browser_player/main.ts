@@ -6,7 +6,7 @@ window.onload = () =>
 	let player		= document.getElementsByTagName("video")[0];
 	let text_area	= document.getElementsByClassName("text_area")[0];
 
-	let buffer	= new AgressiveHls.Buffer({connection_count: 0, advanced_segment_search: true, retry_slow_connections: "fixed"});
+	let buffer	= new AgressiveHls.Buffer({connection_count: 1, advanced_segment_search: false, retry_slow_connections: "off", override_segment_extension: "bin"});
 	let hls		= new Hls({loader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
 	player.ontimeupdate = () =>

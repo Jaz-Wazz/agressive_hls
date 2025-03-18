@@ -7,6 +7,7 @@ export namespace AgressiveHls
 		connection_count?: number;
 		retry_slow_connections?: "off" | "relative" | "fixed";
 		advanced_segment_search?: boolean;
+		override_segment_extension?: string;
 	};
 
 	export class Segment
@@ -29,7 +30,13 @@ export namespace AgressiveHls
 			this.buffer = buffer;
 			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 
-			this.xhr.open("GET", url);
+			if(this.buffer.override_segment_extension != "off")
+			{
+				let url_without_extension = this.url.substring(0, this.url.lastIndexOf(".") + 1);
+				this.url = url_without_extension + this.buffer.override_segment_extension;
+			}
+
+			this.xhr.open("GET", this.url);
 			this.xhr.responseType = "arraybuffer";
 			this.xhr.onload = () => { this.on_load(); };
 			this.xhr.onerror = error => this.on_error(error);
@@ -139,6 +146,7 @@ export namespace AgressiveHls
 		public connection_count: number;
 		public retry_slow_connections: "off" | "relative" | "fixed";
 		public advanced_segment_search: boolean;
+		public override_segment_extension: string;
 
 		public constructor(config: Config)
 		{
@@ -146,6 +154,7 @@ export namespace AgressiveHls
 			this.connection_count = config.connection_count ?? 6;
 			this.retry_slow_connections	= config.retry_slow_connections ?? "off";
 			this.advanced_segment_search = config.advanced_segment_search ?? false;
+			this.override_segment_extension = config.override_segment_extension ?? "off";
 		}
 
 		public on_progress(): void
