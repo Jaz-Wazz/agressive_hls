@@ -1,4 +1,4 @@
-import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
+import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext, PlaylistLoaderConstructor, PlaylistLoaderContext } from "hls.js";
 
 export namespace AgressiveHls
 {
@@ -220,7 +220,7 @@ export namespace AgressiveHls
 			console.groupEnd();
 		}
 
-		public make_loader(): FragmentLoaderConstructor
+		public make_loader(): { new (confg: HlsConfig): Loader<LoaderContext>; }
 		{
 			console.info("Buffer make loader class.");
 			let buffer = this;
@@ -229,7 +229,7 @@ export namespace AgressiveHls
 		}
 	};
 
-	export class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderContext>> Hls.DefaultConfig.loader)
+	export class CustomLoader extends (<new (confg: HlsConfig) => Loader<LoaderContext>> Hls.DefaultConfig.loader)
 	{
 		private buffer: Buffer;
 
@@ -239,13 +239,31 @@ export namespace AgressiveHls
 			this.buffer = buffer;
 		}
 
-		public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
+		public load(context: LoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 		{
-			if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
-			this.buffer.subscribe(context.frag.sn, (buffer) =>
+			if('id' in context)
 			{
-				callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
-			});
+				let playlist_context = context as PlaylistLoaderContext;
+
+				fetch(playlist_context.url).then((response) =>
+				{
+					response.text().then((content) =>
+					{
+						callbacks.onSuccess({url: playlist_context.url, data: content}, this.stats, context, null);
+					});
+				});
+			}
+
+			if('frag' in context)
+			{
+				let fragment_context = context as FragmentLoaderContext;
+
+				if(fragment_context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
+				this.buffer.subscribe(fragment_context.frag.sn, (buffer) =>
+				{
+					callbacks.onSuccess({url: fragment_context.url, data: buffer}, this.stats, context, null);
+				});
+			}
 		}
 
 		public abort(): void

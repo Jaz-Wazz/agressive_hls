@@ -12,7 +12,7 @@ import
 
 export declare namespace AgressiveHls
 {
-	const CustomLoaderBase: new (confg: HlsConfig) => Loader<FragmentLoaderContext>;
+	const CustomLoaderBase: new (confg: HlsConfig) => Loader<LoaderContext>;
 
 	export interface Config
 	{
@@ -66,7 +66,7 @@ export declare namespace AgressiveHls
 		private buffer;
 
 		public constructor(config: HlsConfig, buffer: Buffer);
-		public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>): void;
+		public load(context: LoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>): void;
 		public abort(): void;
 	}
 

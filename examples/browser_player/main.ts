@@ -6,8 +6,8 @@ window.onload = () =>
 	let player		= document.getElementsByTagName("video")[0];
 	let text_area	= document.getElementsByClassName("text_area")[0];
 
-	let buffer	= new AgressiveHls.Buffer({connection_count: 12, advanced_segment_search: true, retry_slow_connections: "fixed"});
-	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
+	let buffer	= new AgressiveHls.Buffer({connection_count: 0, advanced_segment_search: true, retry_slow_connections: "fixed"});
+	let hls		= new Hls({loader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
 	player.ontimeupdate = () =>
 	{
@@ -22,6 +22,6 @@ window.onload = () =>
 		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
 	});
 
-	hls.loadSource('http://ia904603.s3dns.us.archive.org/5f3f32bf/playlist/index-muted-XOUAKEISLI.m3u8');
+	hls.loadSource('https://huggingface.co/datasets/harryvar/ba27265e/resolve/main/playlist/index-dvr.bin');
 	hls.attachMedia(player);
 };
