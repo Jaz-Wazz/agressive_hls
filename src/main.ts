@@ -1,40 +1,80 @@
-import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext } from "hls.js";
+import Hls, { Fragment, FragmentLoaderConstructor, FragmentLoaderContext, HlsConfig, Loader, LoaderCallbacks, LoaderConfiguration, LoaderContext, PlaylistLoaderConstructor, PlaylistLoaderContext } from "hls.js";
 
 export namespace AgressiveHls
 {
 	export interface Config
 	{
 		connection_count?: number;
-		retry_slow_connections?: boolean;
+		retry_slow_connections?: "off" | "relative" | "fixed";
+		advanced_segment_search?: boolean;
+		override_segment_extension?: string;
+		supress_cache?: boolean;
 	};
 
 	export class Segment
 	{
 		private buffer: Buffer;
 		private start_point: number = 0;
-		private url: string;
+		public url: string;
 		public xhr: XMLHttpRequest = new XMLHttpRequest();
 		public speed: number = 0;
 		public speed_rel_avg: number = 0;
-		public speed_rel_avg_stat: "wait" | "good" | "bad" = "wait";
+		public speed_rel_avg_stat: "wait" | "good" | "bad" | "off";
 		public progress: number = 0;
 		public requested: boolean = false;
 		public loaded: boolean = false;
+		public onload: (() => any) | null = null;
 
 		public constructor(buffer: Buffer, url: string)
 		{
 			this.url = url;
 			this.buffer = buffer;
+			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 
-			this.xhr.open("GET", url);
+			if(this.buffer.override_segment_extension != "off")
+			{
+				let url_without_extension = this.url.substring(0, this.url.lastIndexOf(".") + 1);
+				this.url = url_without_extension + this.buffer.override_segment_extension;
+			}
+
+			this.xhr.open("GET", this.url);
 			this.xhr.responseType = "arraybuffer";
-			this.xhr.onload = () => { this.loaded = true; buffer.on_progress(); };
+			this.xhr.onload = () => { this.on_load(); };
 			this.xhr.onerror = error => this.on_error(error);
 			this.xhr.onprogress = (event) => { this.on_progress(event); buffer.on_progress(); };
-			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
-			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
-			this.xhr.setRequestHeader("Pragma", "no-cache");
+
+			if(this.buffer.supress_cache)
+			{
+				this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+				this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+				this.xhr.setRequestHeader("Pragma", "no-cache");
+			}
+
 			this.xhr.send();
+		}
+
+		public on_load()
+		{
+			if(this.xhr.status == 404 && this.buffer.advanced_segment_search)
+			{
+				if(this.url.endsWith("-muted.ts"))
+				{
+					console.warn(`Segment '${this.url.split('/').pop()}' not found, transform to: 'muted -> ts'.`);
+					this.url = this.url.replace("-muted.ts", ".ts");
+				}
+				else
+				{
+					console.warn(`Segment '${this.url.split('/').pop()}' not found, use transformation: 'ts -> muted'.`);
+					this.url = this.url.replace(".ts", "-muted.ts");
+				}
+				this.retry();
+				return;
+			}
+
+			this.buffer.on_progress();
+			this.loaded = true;
+			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "good" : "off";
+			if(this.onload != null) this.onload();
 		}
 
 		public on_progress(event: ProgressEvent<EventTarget>): void
@@ -45,12 +85,20 @@ export namespace AgressiveHls
 				let multiplier = 1000 / elapsed_time;
 				this.speed = event.loaded * multiplier;
 				this.progress = event.loaded / event.total;
+				this.speed_rel_avg = this.speed / this.buffer.speed_avg;
 
-				if(elapsed_time > 8000)
+				if(this.buffer.retry_slow_connections == "fixed" && elapsed_time > 8000 && !this.loaded)
 				{
-					this.speed_rel_avg		= this.speed / this.buffer.speed_avg;
+					let speed_in_mbits = this.speed / 131072;
+					let min_speed = (12 / this.buffer.connection_count) - 0.1;
+					this.speed_rel_avg_stat	= speed_in_mbits > min_speed ? "good" : "bad";
+					if(speed_in_mbits < min_speed) this.retry();
+				}
+
+				if(this.buffer.retry_slow_connections == "relative" && elapsed_time > 8000 && !this.loaded)
+				{
 					this.speed_rel_avg_stat	= this.speed_rel_avg > 0.5 ? "good" : "bad";
-					if(this.speed_rel_avg < 0.5 && !this.loaded && this.buffer.retry_slow_connections) this.retry();
+					if(this.speed_rel_avg < 0.5) this.retry();
 				}
 			}
 			else { this.start_point = new Date().getTime(); }
@@ -76,7 +124,7 @@ export namespace AgressiveHls
 			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
 			this.xhr.setRequestHeader("Pragma", "no-cache");
 			this.speed = this.progress = this.speed_rel_avg = this.start_point = 0;
-			this.speed_rel_avg_stat = "wait";
+			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 			this.xhr.send();
 		}
 
@@ -95,18 +143,26 @@ export namespace AgressiveHls
 	export class Buffer
 	{
 		private	segments: Map<number, Segment> = new Map();
-		private connection_count: number;
-		public retry_slow_connections: boolean;
 		public playlist: Fragment[] | null = null;
 		public on_stats_update: ((content: string) => void) | null = null;
 		public speed_total: number = 0;
 		public speed_avg: number = 0;
 
-		public constructor(config: Config = {connection_count: 6, retry_slow_connections: true})
+		// config
+		public connection_count: number;
+		public retry_slow_connections: "off" | "relative" | "fixed";
+		public advanced_segment_search: boolean;
+		public override_segment_extension: string;
+		public supress_cache: boolean;
+
+		public constructor(config: Config)
 		{
 			console.info("Buffer initialized with config:", config);
-			this.connection_count		= config.connection_count ?? 6;
-			this.retry_slow_connections	= config.retry_slow_connections ?? true;
+			this.connection_count = config.connection_count ?? 6;
+			this.retry_slow_connections	= config.retry_slow_connections ?? "off";
+			this.advanced_segment_search = config.advanced_segment_search ?? false;
+			this.override_segment_extension = config.override_segment_extension ?? "off";
+			this.supress_cache = config.supress_cache ?? "on";
 		}
 
 		public on_progress(): void
@@ -118,7 +174,7 @@ export namespace AgressiveHls
 			if(this.on_stats_update != null)
 			{
 				let format	= (size: number) => (size / 131072).toFixed(2) + " mbit/s";
-				let content	= "Segment        Speed  SrAS  sSrAS  Requested  Loaded  Progress\n";
+				let content	= "Segment        Speed  SrAS    RSC  Requested  Loaded  Progress\n";
 
 				for(let [index, segment] of this.segments)
 				{
@@ -170,7 +226,7 @@ export namespace AgressiveHls
 			{
 				segment.requested = true;
 				console.info("Registered onload callback.");
-				segment.xhr.onload = () =>
+				segment.onload = () =>
 				{
 					if(segment == undefined) throw new Error("undefined_segment");
 					console.info("Callback triggered for", index, "segment, with", segment.xhr.response.byteLength, "bytes.");
@@ -181,7 +237,7 @@ export namespace AgressiveHls
 			console.groupEnd();
 		}
 
-		public make_loader(): FragmentLoaderConstructor
+		public make_loader(): { new (confg: HlsConfig): Loader<LoaderContext>; }
 		{
 			console.info("Buffer make loader class.");
 			let buffer = this;
@@ -190,7 +246,7 @@ export namespace AgressiveHls
 		}
 	};
 
-	export class CustomLoader extends (<new (confg: HlsConfig) => Loader<FragmentLoaderContext>> Hls.DefaultConfig.loader)
+	export class CustomLoader extends (<new (confg: HlsConfig) => Loader<LoaderContext>> Hls.DefaultConfig.loader)
 	{
 		private buffer: Buffer;
 
@@ -200,13 +256,31 @@ export namespace AgressiveHls
 			this.buffer = buffer;
 		}
 
-		public load(context: FragmentLoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
+		public load(context: LoaderContext, config: LoaderConfiguration, callbacks: LoaderCallbacks<LoaderContext>)
 		{
-			if(context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
-			this.buffer.subscribe(context.frag.sn, (buffer) =>
+			if('id' in context)
 			{
-				callbacks.onSuccess({url: context.url, data: buffer}, this.stats, context, null);
-			});
+				let playlist_context = context as PlaylistLoaderContext;
+
+				fetch(playlist_context.url).then((response) =>
+				{
+					response.text().then((content) =>
+					{
+						callbacks.onSuccess({url: playlist_context.url, data: content}, this.stats, context, null);
+					});
+				});
+			}
+
+			if('frag' in context)
+			{
+				let fragment_context = context as FragmentLoaderContext;
+
+				if(fragment_context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
+				this.buffer.subscribe(fragment_context.frag.sn, (buffer) =>
+				{
+					callbacks.onSuccess({url: fragment_context.url, data: buffer}, this.stats, context, null);
+				});
+			}
 		}
 
 		public abort(): void

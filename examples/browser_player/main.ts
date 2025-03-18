@@ -4,10 +4,19 @@ import { AgressiveHls } from "agressive_hls";
 window.onload = () =>
 {
 	let player		= document.getElementsByTagName("video")[0];
-	let text_area	= document.getElementsByTagName("textarea")[0];
+	let text_area	= document.getElementsByClassName("text_area")[0];
 
-	let buffer	= new AgressiveHls.Buffer;
-	let hls		= new Hls({fLoader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
+	let config: AgressiveHls.Config =
+	{
+		connection_count: 1,
+		advanced_segment_search: false,
+		retry_slow_connections: "off",
+		override_segment_extension: "bin",
+		supress_cache: false
+	};
+
+	let buffer = new AgressiveHls.Buffer(config);
+	let hls = new Hls({loader: buffer.make_loader(), enableWorker: true, autoStartLoad: false});
 
 	player.ontimeupdate = () =>
 	{
@@ -22,6 +31,6 @@ window.onload = () =>
 		hls.startLoad(window.location.hash.length > 0 ? parseInt(window.location.hash.slice(1)) : -1);
 	});
 
-	hls.loadSource('http://ia601309.s3dns.us.archive.org/3f2bce09/playlist/index-muted-TJCRE8F3EL.m3u8');
+	hls.loadSource('https://huggingface.co/datasets/harryvar/ba27265e/resolve/main/playlist/index-dvr.bin');
 	hls.attachMedia(player);
 };
