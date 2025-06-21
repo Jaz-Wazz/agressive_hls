@@ -275,11 +275,27 @@ export namespace AgressiveHls
 			{
 				let fragment_context = context as FragmentLoaderContext;
 
-				if(fragment_context.frag.sn == "initSegment") throw new Error("Player take 'initSegment'.");
-				this.buffer.subscribe(fragment_context.frag.sn, (buffer) =>
+				if(fragment_context.frag.sn == "initSegment")
 				{
-					callbacks.onSuccess({url: fragment_context.url, data: buffer}, this.stats, context, null);
-				});
+					let url_without_extension = fragment_context.url.substring(0, fragment_context.url.lastIndexOf(".") + 1);
+					let url = url_without_extension + this.buffer.override_segment_extension;
+
+					fetch(url).then((response) =>
+					{
+						response.arrayBuffer().then((buffer) =>
+						{
+							console.log(buffer.byteLength);
+							callbacks.onSuccess({url: fragment_context.url, data: buffer}, this.stats, context, null);
+						});
+					});
+				}
+				else
+				{
+					this.buffer.subscribe(fragment_context.frag.sn, (buffer) =>
+					{
+						callbacks.onSuccess({url: fragment_context.url, data: buffer}, this.stats, context, null);
+					});
+				}
 			}
 		}
 
