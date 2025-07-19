@@ -57,15 +57,20 @@ export namespace AgressiveHls
 		{
 			if(this.xhr.status == 404 && this.buffer.advanced_segment_search)
 			{
-				if(this.url.endsWith("-muted.ts"))
+				let file_name = this.url.split('/').pop()?.split('.')[0];
+				if(file_name == undefined) throw new Error("Avdanced segment search fail url parse.");
+
+				if(file_name.endsWith("-muted.ts"))
 				{
-					console.warn(`Segment '${this.url.split('/').pop()}' not found, transform to: 'muted -> ts'.`);
-					this.url = this.url.replace("-muted.ts", ".ts");
+					let new_filename = file_name.replace("-muted", "");
+					this.url = this.url.replace(file_name, new_filename);
+					console.warn(`Segment '${file_name}' not found, transformed to: '${new_filename}'.`);
 				}
 				else
 				{
-					console.warn(`Segment '${this.url.split('/').pop()}' not found, use transformation: 'ts -> muted'.`);
-					this.url = this.url.replace(".ts", "-muted.ts");
+					let new_filename = file_name + "-muted";
+					console.warn(`Segment '${file_name}' not found, transformed to: '${new_filename}'.`);
+					this.url = this.url.replace(file_name, new_filename);
 				}
 				this.retry();
 				return;
@@ -120,9 +125,14 @@ export namespace AgressiveHls
 		{
 			this.xhr.abort();
 			this.xhr.open("GET", this.url);
-			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
-			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
-			this.xhr.setRequestHeader("Pragma", "no-cache");
+
+			if(this.buffer.supress_cache)
+			{
+				this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+				this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+				this.xhr.setRequestHeader("Pragma", "no-cache");
+			}
+
 			this.speed = this.progress = this.speed_rel_avg = this.start_point = 0;
 			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 			this.xhr.send();
@@ -162,7 +172,7 @@ export namespace AgressiveHls
 			this.retry_slow_connections	= config.retry_slow_connections ?? "off";
 			this.advanced_segment_search = config.advanced_segment_search ?? false;
 			this.override_segment_extension = config.override_segment_extension ?? "off";
-			this.supress_cache = config.supress_cache ?? "on";
+			this.supress_cache = config.supress_cache ?? true;
 		}
 
 		public on_progress(): void
