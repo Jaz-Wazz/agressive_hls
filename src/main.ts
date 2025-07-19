@@ -120,9 +120,14 @@ export namespace AgressiveHls
 		{
 			this.xhr.abort();
 			this.xhr.open("GET", this.url);
-			this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
-			this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
-			this.xhr.setRequestHeader("Pragma", "no-cache");
+
+			if(this.buffer.supress_cache)
+			{
+				this.xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+				this.xhr.setRequestHeader("Expires", "Thu, 1 Jan 1970 00:00:00 GMT");
+				this.xhr.setRequestHeader("Pragma", "no-cache");
+			}
+
 			this.speed = this.progress = this.speed_rel_avg = this.start_point = 0;
 			this.speed_rel_avg_stat = (this.buffer.retry_slow_connections != "off") ? "wait" : "off";
 			this.xhr.send();
@@ -162,7 +167,7 @@ export namespace AgressiveHls
 			this.retry_slow_connections	= config.retry_slow_connections ?? "off";
 			this.advanced_segment_search = config.advanced_segment_search ?? false;
 			this.override_segment_extension = config.override_segment_extension ?? "off";
-			this.supress_cache = config.supress_cache ?? "on";
+			this.supress_cache = config.supress_cache ?? true;
 		}
 
 		public on_progress(): void
