@@ -57,15 +57,20 @@ export namespace AgressiveHls
 		{
 			if(this.xhr.status == 404 && this.buffer.advanced_segment_search)
 			{
-				if(this.url.endsWith("-muted.ts"))
+				let file_name = this.url.split('/').pop()?.split('.')[0];
+				if(file_name == undefined) throw new Error("Avdanced segment search fail url parse.");
+
+				if(file_name.endsWith("-muted.ts"))
 				{
-					console.warn(`Segment '${this.url.split('/').pop()}' not found, transform to: 'muted -> ts'.`);
-					this.url = this.url.replace("-muted.ts", ".ts");
+					let new_filename = file_name.replace("-muted", "");
+					this.url = this.url.replace(file_name, new_filename);
+					console.warn(`Segment '${file_name}' not found, transformed to: '${new_filename}'.`);
 				}
 				else
 				{
-					console.warn(`Segment '${this.url.split('/').pop()}' not found, use transformation: 'ts -> muted'.`);
-					this.url = this.url.replace(".ts", "-muted.ts");
+					let new_filename = file_name + "-muted";
+					console.warn(`Segment '${file_name}' not found, transformed to: '${new_filename}'.`);
+					this.url = this.url.replace(file_name, new_filename);
 				}
 				this.retry();
 				return;
