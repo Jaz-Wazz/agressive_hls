@@ -287,8 +287,13 @@ export namespace AgressiveHls
 
 				if(fragment_context.frag.sn == "initSegment")
 				{
-					let url_without_extension = fragment_context.url.substring(0, fragment_context.url.lastIndexOf(".") + 1);
-					let url = url_without_extension + this.buffer.override_segment_extension;
+					let url = fragment_context.url;
+
+					if(this.buffer.override_segment_extension != "off")
+					{
+						let url_without_extension = url.substring(0, fragment_context.url.lastIndexOf(".") + 1);
+						url = url_without_extension + this.buffer.override_segment_extension;
+					}
 
 					fetch(url).then((response) =>
 					{

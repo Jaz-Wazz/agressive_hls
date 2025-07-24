@@ -1,6 +1,6 @@
 {
 	"name": "agressive_hls",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"description": "Agressive hls loader library.",
 	"scripts":
 	{
